@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vertex Distance Compensation • Optician’s Desk</title>
+    <link rel="stylesheet" href="../css/styles.css" />
+    <style>
+        .form{display:grid;gap:14px;grid-template-columns:repeat(3,1fr)}
+        .field{display:flex;flex-direction:column;gap:6px}
+        .field input{padding:.7rem .8rem;border:1px solid var(--line);border-radius:12px}
+        .hint{font-size:.85rem;opacity:.75}
+        .out{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+        .out .card{padding:16px}
+        @media(max-width:980px){.form{grid-template-columns:1fr 1fr}.out{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="container nav">
+        <div class="brand">Optician’s Desk</div>
+        <nav class="navlinks">
+            <a href="../index.html">Home</a>
+            <a href="../index.html#calculators">All Calculators</a>
+        </nav>
+    </div>
+</header>
+
+<main class="container page">
+    <section class="card" style="padding:24px">
+        <h1 style="margin:0 0 6px">Vertex Distance Compensation</h1>
+        <p class="hint">
+            Adjust power when the lens moves relative to the eye.
+            Formula: <b>F<sub>eff</sub> = F / (1 − d·F)</b> with <b>d</b> in meters (<b>d = oldVD − newVD</b>).
+        </p>
+
+        <div class="form" style="margin-top:10px">
+            <label class="field">
+                <span>Lens Power F (D)</span>
+                <input id="power" type="number" step="0.25" value="-10.00">
+            </label>
+            <label class="field">
+                <span>Original Vertex (mm)</span>
+                <input id="oldVD" type="number" step="0.5" value="12">
+                <span class="hint">At refraction / original fit</span>
+            </label>
+            <label class="field">
+                <span>New Vertex (mm)</span>
+                <input id="newVD" type="number" step="0.5" value="8">
+                <span class="hint">At new frame / CL equivalent</span>
+            </label>
+            <div class="field">
+                <span>&nbsp;</span>
+                <button id="calcBtn" class="btn btn--solid" type="button">Calculate</button>
+            </div>
+        </div>
+
+        <div class="out" style="margin-top:16px">
+            <div class="card">
+                <div class="section-title">Effective Power</div>
+                <div id="effOut" style="font-size:1.6rem;margin-top:6px;font-weight:700">—</div>
+                <button class="btn btn--ghost" id="copyEff" type="button" style="margin-top:10px">Copy</button>
+            </div>
+            <div class="card">
+                <div class="section-title">Details</div>
+                <div id="notes" class="hint" style="margin-top:6px"> </div>
+            </div>
+        </div>
+
+        <p class="hint" style="margin-top:12px">
+            Notes: For strong minus, moving lens closer reduces minus power (less negative). For strong plus, moving closer increases plus.
+        </p>
+    </section>
+</main>
+
+<footer class="footer">
+    <div class="container footer__grid">
+        <div>© 2025 Optician’s Desk</div>
+        <div class="footer__links"><a href="../index.html#about">About</a></div>
+    </div>
+</footer>
+
+<script>
+    const $ = s => document.querySelector(s);
+
+    function fmtD(x){
+        const s = (x>0?'+':'') + x.toFixed(2);
+        return `${s} D`;
+    }
+
+    function compute(){
+        const F = parseFloat($('#power').value||0);
+        const oldVDmm = parseFloat($('#oldVD').value||0);
+        const newVDmm = parseFloat($('#newVD').value||0);
+
+        const d = (oldVDmm - newVDmm) / 1000; // meters; closer → positive
+        const Feff = F / (1 - d * F);
+
+        $('#effOut').textContent = fmtD(Feff);
+        $('#notes').innerHTML = `d = (oldVD − newVD) = (${oldVDmm.toFixed(1)} − ${newVDmm.toFixed(1)}) mm = ${(d*1000).toFixed(1)} mm<br>` +
+            `F<sub>eff</sub> = F / (1 − dF) = ${F.toFixed(2)} / (1 − ${(d*F).toFixed(3)})`;
+    }
+
+    $('#calcBtn').addEventListener('click', compute);
+    $('#copyEff').addEventListener('click', ()=>navigator.clipboard?.writeText($('#effOut').textContent));
+
+    compute(); // initial
+</script>
+</body>
+</html>

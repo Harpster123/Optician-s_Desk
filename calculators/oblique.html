@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Oblique Cylinder Power • Optician’s Desk</title>
+    <link rel="stylesheet" href="../css/styles.css" />
+    <style>
+        .form{display:grid;gap:14px;grid-template-columns:repeat(4,1fr)}
+        .field{display:flex;flex-direction:column;gap:6px}
+        .field input{padding:.7rem .8rem;border:1px solid var(--line);border-radius:12px}
+        .hint{font-size:.85rem;opacity:.75}
+        .out{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+        .out .card{padding:16px}
+        @media(max-width:1080px){.form{grid-template-columns:1fr 1fr}.out{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="container nav">
+        <div class="brand">Optician’s Desk</div>
+        <nav class="navlinks">
+            <a href="../index.html">Home</a>
+            <a href="../index.html#calculators">All Calculators</a>
+        </nav>
+    </div>
+</header>
+
+<main class="container page">
+    <section class="card" style="padding:24px">
+        <h1 style="margin:0 0 6px">Oblique Cylinder Power</h1>
+        <p class="hint">
+            Meridian power at any axis: <b>F(θ) = S + C·sin²(θ − α)</b> (θ, α in degrees).
+            Gives power at a target meridian (useful for toric optics reasoning).
+        </p>
+
+        <div class="form" style="margin-top:10px">
+            <label class="field">
+                <span>Sphere S (D)</span>
+                <input id="sphere" type="number" step="0.25" value="-2.00">
+            </label>
+            <label class="field">
+                <span>Cylinder C (D)</span>
+                <input id="cyl" type="number" step="0.25" value="-1.50">
+            </label>
+            <label class="field">
+                <span>Cylinder Axis α (°)</span>
+                <input id="axis" type="number" step="1" value="180">
+                <span class="hint">1–180°</span>
+            </label>
+            <label class="field">
+                <span>Target Axis θ (°)</span>
+                <input id="theta" type="number" step="1" value="90">
+                <span class="hint">Meridian to evaluate</span>
+            </label>
+            <div class="field">
+                <span>&nbsp;</span>
+                <button id="calcBtn" class="btn btn--solid" type="button">Calculate</button>
+            </div>
+        </div>
+
+        <div class="out" style="margin-top:16px">
+            <div class="card">
+                <div class="section-title">Power at θ</div>
+                <div id="powerOut" style="font-size:1.6rem;margin-top:6px;font-weight:700">—</div>
+                <button class="btn btn--ghost" id="copyBtn" type="button" style="margin-top:10px">Copy</button>
+            </div>
+            <div class="card">
+                <div class="section-title">Details</div>
+                <div id="notes" class="hint" style="margin-top:6px"> </div>
+            </div>
+        </div>
+
+        <p class="hint" style="margin-top:12px">
+            Tip: At θ = α (the cyl axis), sin²(0)=0 → F(θ)=S. At θ = α+90°, sin²(90°)=1 → F(θ)=S+C (the power in the strong meridian).
+        </p>
+    </section>
+</main>
+
+<footer class="footer">
+    <div class="container footer__grid">
+        <div>© 2025 Optician’s Desk</div>
+        <div class="footer__links"><a href="../index.html#about">About</a></div>
+    </div>
+</footer>
+
+<script>
+    const $ = s => document.querySelector(s);
+    const clampAxis = a => {
+        // Normalize to 1..180
+        let v = ((a % 180) + 180) % 180;
+        return v === 0 ? 180 : v;
+    };
+    const fmtD = x => ((x>0?'+':'') + x.toFixed(2) + ' D');
+
+    function compute(){
+        const S = parseFloat($('#sphere').value||0);
+        const C = parseFloat($('#cyl').value||0);
+        const alpha = clampAxis(parseFloat($('#axis').value||0));
+        const theta = clampAxis(parseFloat($('#theta').value||0));
+
+        const rad = (theta - alpha) * Math.PI / 180;
+        const Ftheta = S + C * Math.pow(Math.sin(rad), 2);
+
+        $('#powerOut').textContent = fmtD(Ftheta);
+        $('#notes').innerHTML =
+            `θ − α = ${theta}° − ${alpha}° = ${(theta-alpha)}° → sin² = ${Math.pow(Math.sin(rad),2).toFixed(4)}<br>` +
+            `F(θ) = S + C·sin²(Δ) = ${S.toFixed(2)} + (${C.toFixed(2)})×(…)`;
+    }
+
+    $('#calcBtn').addEventListener('click', compute);
+    $('#copyBtn').addEventListener('click', ()=>navigator.clipboard?.writeText($('#powerOut').textContent));
+    compute(); // initial
+</script>
+</body>
+</html>

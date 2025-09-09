@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MBS (Single Eye) • Optician’s Desk</title>
+    <link rel="stylesheet" href="../css/styles.css" />
+    <style>
+        .form { display:grid; gap:14px; grid-template-columns: repeat(3, 1fr); }
+        .field { display:flex; flex-direction:column; gap:6px; }
+        .field input, .field select { padding:.7rem .8rem; border:1px solid var(--line); border-radius:12px; }
+        .hint { font-size:.85rem; opacity:.75 }
+        .out { display:grid; gap:12px; grid-template-columns:1fr 1fr 1fr; }
+        .out .card{ padding:16px }
+        @media (max-width: 980px){ .form{ grid-template-columns:1fr 1fr } .out{ grid-template-columns:1fr } }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="container nav">
+        <div class="brand">Optician’s Desk</div>
+        <nav class="navlinks">
+            <a href="../index.html">Home</a>
+            <a href="../index.html#calculators">All Calculators</a>
+        </nav>
+    </div>
+</header>
+
+<main class="container page">
+    <section class="card" style="padding:24px">
+        <h1 style="margin:0 0 6px">MBS (Single Eye) — Lens Size / Uncut</h1>
+        <p class="hint">
+            <b>halfFramePD</b> = (A + DBL) / 2.
+            <b>Decentration</b> = |halfFramePD − monoPD|.
+            <b>MBS</b> = ED + 2×decentration + allowance.
+            We suggest the next available stock diameter.
+        </p>
+
+        <div class="form" style="margin-top:10px">
+            <label class="field">
+                <span>Eye</span>
+                <select id="eye">
+                    <option value="R">Right</option>
+                    <option value="L">Left</option>
+                </select>
+            </label>
+
+            <label class="field">
+                <span>Monocular PD (mm)</span>
+                <input id="mono" type="number" step="0.5" value="32">
+            </label>
+
+            <label class="field">
+                <span>A size (mm)</span>
+                <input id="A" type="number" step="0.5" value="52">
+            </label>
+
+            <label class="field">
+                <span>DBL / Bridge (mm)</span>
+                <input id="DBL" type="number" step="0.5" value="18">
+            </label>
+
+            <label class="field">
+                <span>ED – Effective Diameter (mm)</span>
+                <input id="ED" type="number" step="0.5" value="60">
+            </label>
+
+            <label class="field">
+                <span>Allowance (mm)</span>
+                <input id="allow" type="number" step="0.5" value="2">
+                <span class="hint">Typical 2–3 mm.</span>
+            </label>
+
+            <label class="field">
+                <span>Stock diameters (mm)</span>
+                <input id="stock" type="text" value="65,70,75,80,85">
+                <span class="hint">Used to suggest next size.</span>
+            </label>
+
+            <div class="field">
+                <span>&nbsp;</span>
+                <button id="calcBtn" class="btn btn--solid" type="button">Calculate</button>
+            </div>
+        </div>
+
+        <div class="out" style="margin-top:16px">
+            <div class="card">
+                <div class="section-title">halfFramePD (mm)</div>
+                <div id="halfFrame" style="font-size:1.2rem; margin-top:6px">—</div>
+                <div class="hint" id="halfExpl"> </div>
+            </div>
+
+            <div class="card">
+                <div class="section-title">Decentration</div>
+                <div id="decentration" style="font-size:1.2rem; margin-top:6px">—</div>
+                <div class="hint" id="decExpl"> </div>
+            </div>
+
+            <div class="card">
+                <div class="section-title">MBS (mm)</div>
+                <div id="mbs" style="font-size:1.6rem; margin-top:6px; font-weight:700">—</div>
+                <button class="btn btn--ghost" id="copyMbs" type="button" style="margin-top:10px">Copy MBS</button>
+            </div>
+
+            <div class="card">
+                <div class="section-title">Suggested Uncut Diameter</div>
+                <div id="suggest" style="font-size:1.2rem; margin-top:6px">—</div>
+                <div class="hint" id="stockNote">Using: 65, 70, 75, 80, 85</div>
+            </div>
+        </div>
+
+        <p class="hint" style="margin-top:12px">
+            Tip: For high wraps/tilt or tight bevels, consider increasing the allowance. Always check edge thickness for high powers.
+        </p>
+    </section>
+</main>
+
+<footer class="footer">
+    <div class="container footer__grid">
+        <div>© 2025 Optician’s Desk</div>
+        <div class="footer__links"><a href="../index.html#about">About</a></div>
+    </div>
+</footer>
+
+<script>
+    const $ = s => document.querySelector(s);
+    const num = (el, def=0) => { const v = parseFloat(el.value); return isNaN(v) ? def : v; };
+
+    function compute(){
+        const mono = num($('#mono'));
+        const A = num($('#A'));
+        const DBL = num($('#DBL'));
+        const ED = num($('#ED'));
+        const allow = num($('#allow'), 2);
+
+        if([A,DBL,ED].some(x=>isNaN(x))){
+            $('#halfFrame').textContent = '—';
+            $('#mbs').textContent = 'Enter A, DBL, ED';
+            $('#suggest').textContent = '—';
+            $('#decentration').textContent = '—';
+            return;
+        }
+
+        const halfFramePD = (A + DBL) / 2;
+        const dec = Math.abs(halfFramePD - mono);
+        const mbs = ED + (2 * dec) + allow;
+
+        const stockList = $('#stock').value
+            .split(',')
+            .map(s => parseFloat(s.trim()))
+            .filter(n => !isNaN(n))
+            .sort((a,b)=>a-b);
+
+        let suggest = '—';
+        for (const d of stockList) { if (d >= mbs) { suggest = `${d.toFixed(0)} mm`; break; } }
+        if (suggest === '—' && stockList.length) suggest = `${stockList[stockList.length-1].toFixed(0)} mm+`;
+
+        // Outputs
+        $('#halfFrame').textContent = `${halfFramePD.toFixed(1)} mm`;
+        $('#halfExpl').textContent = `halfFramePD = (A + DBL) / 2 = (${A.toFixed(1)} + ${DBL.toFixed(1)}) / 2`;
+
+        $('#decentration').textContent = `${dec.toFixed(1)} mm`;
+        $('#decExpl').textContent = `|${halfFramePD.toFixed(1)} − ${mono.toFixed(1)}|`;
+
+        $('#mbs').textContent = `${mbs.toFixed(1)} mm`;
+        $('#stockNote').textContent = `Using: ${stockList.join(', ')}`;
+        $('#suggest').textContent = suggest;
+    }
+
+    function copy(text){ navigator.clipboard?.writeText(text).catch(()=>{}); }
+
+    $('#calcBtn').addEventListener('click', compute);
+    $('#copyMbs').addEventListener('click', ()=>copy($('#mbs').textContent));
+
+    compute(); // run once on load
+</script>
+</body>
+</html>

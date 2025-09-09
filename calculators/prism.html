@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Prism & Decentration • Optician’s Desk</title>
+    <link rel="stylesheet" href="../css/styles.css" />
+    <style>
+        .form{display:grid;gap:14px;grid-template-columns:repeat(3,1fr)}
+        .field{display:flex;flex-direction:column;gap:6px}
+        .field input,.field select{padding:.7rem .8rem;border:1px solid var(--line);border-radius:12px}
+        .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+        .out{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+        .out .card{padding:16px}
+        @media(max-width:900px){.form{grid-template-columns:1fr 1fr}.out{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+<header class="header">
+    <div class="container nav">
+        <div class="brand">Optician’s Desk</div>
+        <nav class="navlinks">
+            <a href="../index.html">Home</a>
+            <a href="../index.html#calculators">All Calculators</a>
+        </nav>
+    </div>
+</header>
+
+<main class="container page">
+    <section class="card" style="padding:24px">
+        <h1 style="margin:0 0 6px">Prism &amp; Decentration (Prentice)</h1>
+        <p class="pillnote">Δ = (c(mm) × F(D)) / 10 &nbsp; • &nbsp; c = (10 × Δ) / |F|</p>
+
+        <div class="row" style="margin:8px 0 6px">
+            <label class="row"><input type="radio" name="mode" value="pfromc" checked> Prism from decentration</label>
+            <label class="row"><input type="radio" name="mode" value="cfromp"> Decentration from prism</label>
+        </div>
+
+        <div class="form">
+            <label class="field">
+                <span>Lens power F (D)</span>
+                <input id="power" type="number" step="0.01" value="+10.00">
+            </label>
+
+            <label class="field">
+                <span>Direction</span>
+                <select id="direction">
+                    <option value="H">Horizontal</option>
+                    <option value="V" selected>Vertical</option>
+                </select>
+            </label>
+
+            <!-- Base selection auto-filters to BI/BO for H, BU/BD for V -->
+            <label class="field">
+                <span>Base</span>
+                <select id="base"></select>
+            </label>
+
+            <!-- Decentration input (mode: Prism from decentration) -->
+            <label class="field" id="decentField">
+                <span>Decentration c (mm)</span>
+                <input id="cent" type="number" step="0.1" value="1.0">
+            </label>
+
+            <!-- Decentration direction selector depends on H/V -->
+            <label class="field" id="decDirField">
+                <span>Decenter which way?</span>
+                <select id="decDir"></select>
+            </label>
+
+            <!-- Prism input (mode: Decentration from prism) -->
+            <label class="field" id="prismField" style="display:none">
+                <span>Prism Δ (prism diopters)</span>
+                <input id="prism" type="number" step="0.1" value="1.0">
+            </label>
+
+            <div class="field">
+                <span>&nbsp;</span>
+                <button id="calcBtn" class="btn btn--solid" type="button">Calculate</button>
+            </div>
+        </div>
+
+        <div class="out" style="margin-top:16px">
+            <div class="card">
+                <div class="section-title">Result</div>
+                <div id="result" style="font-size:1.6rem;margin-top:6px;font-weight:700">—</div>
+                <button class="btn btn--ghost" id="copyBtn" type="button" style="margin-top:10px">Copy</button>
+            </div>
+            <div class="card">
+                <div class="section-title">Movement Guidance</div>
+                <div id="notes" class="pillnote" style="margin-top:6px">
+                    Enter values, choose H/V, and we’ll tell you which way to move the lens.
+                    Rule of thumb: **Plus = opposite; Minus = same** (between desired base and decentration direction).
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="footer">
+    <div class="container footer__grid">
+        <div>© 2025 Optician’s Desk</div>
+        <div class="footer__links"><a href="../index.html#about">About</a></div>
+    </div>
+</footer>
+
+<script>
+    const $ = s => document.querySelector(s);
+
+    function mode(){ return document.querySelector('input[name="mode"]:checked').value; }
+    function sign(x){ return x>0 ? 1 : (x<0 ? -1 : 0); }
+
+    // populate selects based on H/V
+    function populateBaseAndDecDir(){
+        const dir = $('#direction').value;  // H or V
+        const base = $('#base');
+        const decDir = $('#decDir');
+        base.innerHTML = '';
+        decDir.innerHTML = '';
+
+        if(dir === 'H'){
+            // base choices
+            ['BI','BO'].forEach(v=>{
+                const o=document.createElement('option'); o.value=v; o.textContent=v; base.appendChild(o);
+            });
+            // decentration direction choices (no eye needed; use anatomical terms)
+            [
+                ['NASAL','Nasal (toward bridge)'],
+                ['TEMPORAL','Temporal (toward temple)'],
+            ].forEach(([v,t])=>{
+                const o=document.createElement('option'); o.value=v; o.textContent=t; decDir.appendChild(o);
+            });
+        } else {
+            // Vertical
+            [['BU','Base Up'], ['BD','Base Down']].forEach(([v,t])=>{
+                const o=document.createElement('option'); o.value=v; o.textContent=t; base.appendChild(o);
+            });
+            [['UP','Upward'], ['DOWN','Downward']].forEach(([v,t])=>{
+                const o=document.createElement('option'); o.value=v; o.textContent=t; decDir.appendChild(o);
+            });
+        }
+    }
+
+    function toggleFields(){
+        const m = mode();
+        $('#decentField').style.display = (m==='pfromc') ? '' : 'none';
+        $('#decDirField').style.display = (m==='pfromc') ? '' : 'none';
+        $('#prismField').style.display  = (m==='cfromp') ? '' : 'none';
+    }
+
+    // Map decentration ↔ base with power sign.
+    // Rule used: For PLUS power: base is **opposite** the decentration direction.
+    //            For MINUS power: base is **same** as the decentration direction.
+    // Horizontal mapping uses nasal/temporal ↔ BI/BO.
+    // Vertical mapping uses up/down ↔ BU/BD.
+    function baseFromDecentration(dir, decDir, Fsign){
+        if(dir==='H'){
+            if(decDir==='NASAL'){
+                return (Fsign>0) ? 'BO' : 'BI';
+            } else { // TEMPORAL
+                return (Fsign>0) ? 'BI' : 'BO';
+            }
+        } else {
+            if(decDir==='UP'){
+                return (Fsign>0) ? 'BD' : 'BU';
+            } else { // DOWN
+                return (Fsign>0) ? 'BU' : 'BD';
+            }
+        }
+    }
+
+    // Inverse: which decentration direction achieves a desired base given power sign
+    function decFromBase(dir, base, Fsign){
+        if(dir==='H'){
+            if(base==='BI'){
+                return (Fsign>0) ? 'TEMPORAL' : 'NASAL';
+            } else { // BO
+                return (Fsign>0) ? 'NASAL' : 'TEMPORAL';
+            }
+        } else {
+            if(base==='BU'){
+                return (Fsign>0) ? 'DOWN' : 'UP';
+            } else { // BD
+                return (Fsign>0) ? 'UP' : 'DOWN';
+            }
+        }
+    }
+
+    function compute(){
+        const F = parseFloat($('#power').value || 0);
+        const dir = $('#direction').value;   // H or V
+        const base = $('#base').value;       // BI/BO or BU/BD
+        const Fsgn = sign(F);
+
+        if(F === 0){
+            $('#result').textContent = 'Need non‑zero power F';
+            $('#notes').textContent  = 'Prentice requires non-zero lens power.';
+            return;
+        }
+
+        if(mode()==='pfromc'){
+            const c = Math.abs(parseFloat($('#cent').value || 0));
+            const decDir = $('#decDir').value; // nasal/temporal or up/down
+            const P = (c * Math.abs(F)) / 10; // magnitude
+
+            const derivedBase = baseFromDecentration(dir, decDir, Fsgn);
+            const baseText = (dir==='H')
+                ? (derivedBase==='BI' ? 'Base In' : 'Base Out')
+                : (derivedBase==='BU' ? 'Base Up' : 'Base Down');
+
+            $('#result').textContent = `${P.toFixed(2)}Δ ${derivedBase}`;
+            // Movement note mirrors your rule (plus = opposite; minus = same)
+            const moveText = (dir==='H')
+                ? (decDir==='NASAL' ? 'Move lens NASAL (toward bridge)' : 'Move lens TEMPORAL (toward temple)')
+                : (decDir==='UP' ? 'Move lens UP' : 'Move lens DOWN');
+
+            $('#notes').innerHTML =
+                `With F = ${F.toFixed(2)}D, decentering ${moveText.replace('Move lens ','').toLowerCase()} gives <b>${baseText}</b>.<br>` +
+                `Rule: <b>${Fsgn>0?'Plus (opposite)':'Minus (same)'}</b> between desired base and decentration direction.`;
+        } else {
+            // c from prism
+            const P = Math.abs(parseFloat($('#prism').value || 0));
+            const c = (10 * P) / Math.abs(F); // mm
+            const neededDec = decFromBase(dir, base, Fsgn);
+
+            const decText = (dir==='H')
+                ? (neededDec==='NASAL' ? 'NASAL (toward bridge)' : 'TEMPORAL (toward temple)')
+                : (neededDec==='UP' ? 'UP' : 'DOWN');
+
+            const baseText = (dir==='H')
+                ? (base==='BI' ? 'Base In' : 'Base Out')
+                : (base==='BU' ? 'Base Up' : 'Base Down');
+
+            $('#result').textContent = `${c.toFixed(2)} mm ${dir==='H'?'('+decText+')':''}`;
+            $('#notes').innerHTML =
+                `To achieve <b>${P.toFixed(2)}Δ ${baseText}</b> with F = ${F.toFixed(2)}D, decenter <b>${decText}</b>.<br>` +
+                `Rule: <b>${Fsgn>0?'Plus (opposite)':'Minus (same)'}</b> between base and decentration direction.`;
+        }
+    }
+
+    function onDirChange(){
+        populateBaseAndDecDir();
+        compute();
+    }
+
+    // init
+    populateBaseAndDecDir();
+    toggleFields();
+    $('#direction').addEventListener('change', onDirChange);
+    document.querySelectorAll('input[name="mode"]').forEach(el=>el.addEventListener('change', ()=>{toggleFields(); compute();}));
+    $('#calcBtn').addEventListener('click', compute);
+    $('#copyBtn').addEventListener('click', ()=>navigator.clipboard?.writeText($('#result').textContent));
+
+    compute();
+</script>
+</body>
+</html>
