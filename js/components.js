@@ -19,10 +19,50 @@
     /* ── Inject shared CSS ── */
     const style = document.createElement('style');
     style.textContent = `
+      .odb-dev-banner {
+        background: #2a3d34;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        padding: 6px 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        position: sticky;
+        top: 0;
+        z-index: 51;
+      }
+      .odb-dev-banner__dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #5f776c;
+        flex-shrink: 0;
+        animation: odb-pulse 2.4s ease-in-out infinite;
+      }
+      .odb-dev-banner p {
+        font-size: 0.72rem;
+        font-weight: 500;
+        letter-spacing: 0.05em;
+        color: rgba(255,255,255,0.38);
+        margin: 0;
+        font-family: 'DM Sans', sans-serif;
+      }
+      .odb-dev-banner p strong {
+        color: rgba(255,255,255,0.55);
+        font-weight: 600;
+      }
+      @keyframes odb-pulse {
+        0%, 100% { opacity: 0.4; }
+        50%       { opacity: 1; }
+      }
+      body.dark .odb-dev-banner {
+        background: #111916;
+        border-bottom-color: rgba(255,255,255,0.04);
+      }
       .odb-header {
         background: #1a2e26;
         position: sticky;
-        top: 0;
+        top: 31px;
         z-index: 50;
         box-shadow: 0 1px 0 rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.18);
       }
@@ -170,18 +210,241 @@
         .odb-nav        { display: none; }
         .odb-hamburger  { display: flex; }
       }
+      /* ── Footer ── */
       .odb-footer {
         margin-top: 64px;
         border-top: 1px solid rgba(0,0,0,0.07);
-        padding: 24px 32px;
-        text-align: center;
+        background: #f0f3f1;
       }
-      .odb-footer p {
-        font-size: 0.82rem;
+      body.dark .odb-footer { background: #111916; border-top-color: rgba(255,255,255,0.06); }
+
+      .odb-footer__inner {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 32px 32px 24px;
+      }
+
+      /* Tab row */
+      .odb-footer__tabs {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        margin-bottom: 0;
+        border-bottom: 1px solid rgba(0,0,0,0.07);
+        flex-wrap: wrap;
+      }
+      body.dark .odb-footer__tabs { border-bottom-color: rgba(255,255,255,0.07); }
+
+      .odb-footer__tab {
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
         color: #9aaba5;
+        background: transparent;
+        border: none;
+        border-bottom: 2px solid transparent;
+        padding: 10px 18px 10px 0;
+        margin-bottom: -1px;
+        cursor: pointer;
+        font-family: 'DM Sans', sans-serif;
+        transition: color 0.15s, border-color 0.15s;
+      }
+      .odb-footer__tab:hover { color: #5f776c; }
+      .odb-footer__tab.active { color: #1a2e26; border-bottom-color: #5f776c; }
+      body.dark .odb-footer__tab { color: #3d5248; }
+      body.dark .odb-footer__tab:hover { color: #7a9488; }
+      body.dark .odb-footer__tab.active { color: #c8ddd6; border-bottom-color: #5f776c; }
+
+      .odb-footer__copy {
+        font-size: 0.75rem;
+        color: #b0bdb9;
+        margin-left: auto;
+        padding-bottom: 10px;
+        font-family: 'DM Sans', sans-serif;
+      }
+      body.dark .odb-footer__copy { color: #3d5248; }
+
+      /* Panels */
+      .odb-footer__panel { display: none; padding: 28px 0 8px; }
+      .odb-footer__panel.active { display: block; }
+
+      /* Doc styles */
+      .odb-footer__updated {
+        font-size: 0.72rem;
+        letter-spacing: 0.05em;
+        color: #b0bdb9;
+        margin-bottom: 20px;
+        font-family: 'DM Sans', sans-serif;
+      }
+      body.dark .odb-footer__updated { color: #3d5248; }
+
+      .odb-footer__doc-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 24px 40px;
+      }
+
+      .odb-footer__doc-section h3 {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: #2f4a3e;
+        margin: 0 0 6px;
+      }
+      body.dark .odb-footer__doc-section h3 { color: #5f776c; }
+
+      .odb-footer__doc-section p,
+      .odb-footer__doc-section ul {
+        font-size: 0.82rem;
+        color: #4a5450;
+        line-height: 1.7;
         margin: 0;
       }
-      body.dark .odb-footer p { color: #3d5248; }
+      body.dark .odb-footer__doc-section p,
+      body.dark .odb-footer__doc-section ul { color: #7a9488; }
+
+      .odb-footer__doc-section ul { padding-left: 1.1rem; }
+      .odb-footer__doc-section ul li { margin-bottom: 3px; }
+      .odb-footer__doc-section a { color: #5f776c; }
+      body.dark .odb-footer__doc-section a { color: #7a9488; }
+
+      /* Feedback form */
+      .odb-footer__form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        max-width: 640px;
+      }
+      @media (max-width: 560px) { .odb-footer__form-grid { grid-template-columns: 1fr; } }
+
+      .odb-footer__field { display: flex; flex-direction: column; gap: 5px; }
+      .odb-footer__field.full { grid-column: 1 / -1; }
+
+      .odb-footer__field label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: #9aaba5;
+        font-family: 'DM Sans', sans-serif;
+      }
+      body.dark .odb-footer__field label { color: #3d5248; }
+
+      .odb-footer__field input,
+      .odb-footer__field select,
+      .odb-footer__field textarea {
+        font-size: 0.88rem;
+        font-family: 'DM Sans', sans-serif;
+        padding: 9px 12px;
+        border: 1px solid rgba(0,0,0,0.10);
+        border-radius: 10px;
+        background: #fff;
+        color: #1a1f1c;
+        outline: none;
+        transition: border-color 0.15s;
+      }
+      .odb-footer__field input:focus,
+      .odb-footer__field select:focus,
+      .odb-footer__field textarea:focus { border-color: #5f776c; }
+      .odb-footer__field textarea { resize: vertical; min-height: 88px; line-height: 1.6; }
+
+      body.dark .odb-footer__field input,
+      body.dark .odb-footer__field select,
+      body.dark .odb-footer__field textarea {
+        background: #1c2620;
+        border-color: #263028;
+        color: #d8e4df;
+      }
+      body.dark .odb-footer__field input:focus,
+      body.dark .odb-footer__field select:focus,
+      body.dark .odb-footer__field textarea:focus { border-color: #5f776c; }
+
+      .odb-footer__char {
+        font-size: 0.7rem;
+        color: #b0bdb9;
+        text-align: right;
+        font-family: 'DM Sans', sans-serif;
+      }
+
+      .odb-footer__rating-row { display: flex; gap: 6px; }
+      .odb-footer__rating-row button {
+        width: 34px; height: 34px;
+        border: 1px solid rgba(0,0,0,0.10);
+        border-radius: 8px;
+        background: #fff;
+        color: #9aaba5;
+        font-size: 0.82rem;
+        font-family: 'DM Sans', sans-serif;
+        cursor: pointer;
+        transition: all 0.1s;
+      }
+      .odb-footer__rating-row button:hover { border-color: #5f776c; color: #5f776c; }
+      .odb-footer__rating-row button.selected { background: #2f4a3e; border-color: #2f4a3e; color: #fff; }
+      body.dark .odb-footer__rating-row button { background: #1c2620; border-color: #263028; color: #3d5248; }
+      body.dark .odb-footer__rating-row button.selected { background: #2f4a3e; border-color: #2f4a3e; color: #fff; }
+
+      .odb-footer__actions {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-top: 16px;
+        grid-column: 1 / -1;
+      }
+
+      .odb-footer__submit {
+        padding: 9px 22px;
+        border-radius: 10px;
+        border: none;
+        background: #2f4a3e;
+        color: #fff;
+        font-size: 0.85rem;
+        font-weight: 600;
+        font-family: 'DM Sans', sans-serif;
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+      .odb-footer__submit:hover { background: #1a2e26; }
+      .odb-footer__submit:active { transform: scale(0.98); }
+
+      .odb-footer__form-note {
+        font-size: 0.75rem;
+        color: #b0bdb9;
+        font-family: 'DM Sans', sans-serif;
+      }
+      body.dark .odb-footer__form-note { color: #3d5248; }
+
+      .odb-footer__success {
+        display: none;
+        font-size: 0.88rem;
+        color: #5f776c;
+        padding: 12px 0 4px;
+        font-family: 'DM Sans', sans-serif;
+      }
+      .odb-footer__success.show { display: block; }
+
+      /* Bottom bar */
+      .odb-footer__bottom {
+        margin-top: 28px;
+        padding-top: 16px;
+        border-top: 1px solid rgba(0,0,0,0.06);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      body.dark .odb-footer__bottom { border-top-color: rgba(255,255,255,0.05); }
+
+      .odb-footer__bottom p {
+        font-size: 0.75rem;
+        color: #b0bdb9;
+        margin: 0;
+        font-family: 'DM Sans', sans-serif;
+      }
+      body.dark .odb-footer__bottom p { color: #3d5248; }
 
       /* ── Global dark mode for calculator pages ── */
       body.dark { background: #111916; color: #d8e4df; }
@@ -245,6 +508,14 @@
       return window.location.pathname.includes('/calculators/') ? 'active' : '';
     }
 
+    /* ── Dev banner HTML ── */
+    const devBannerHTML = `
+      <div class="odb-dev-banner" id="odb-dev-banner">
+        <span class="odb-dev-banner__dot"></span>
+        <p><strong>Beta</strong> — Optician's Desk is currently in development. Some features may be incomplete.</p>
+      </div>
+    `;
+
     /* ── Header HTML ── */
     const headerHTML = `
       <header class="odb-header">
@@ -278,9 +549,136 @@
     /* ── Footer HTML ── */
     const footerHTML = `
       <footer class="odb-footer">
-        <p>Optician's Desk — built for NZ optical dispensing</p>
+        <div class="odb-footer__inner">
+
+          <div class="odb-footer__tabs">
+            <button class="odb-footer__tab" data-tab="disclaimer" onclick="ODB.footerTab('disclaimer')">Disclaimer</button>
+            <button class="odb-footer__tab" data-tab="privacy" onclick="ODB.footerTab('privacy')">Privacy policy</button>
+            <button class="odb-footer__tab" data-tab="feedback" onclick="ODB.footerTab('feedback')">Feedback</button>
+            <span class="odb-footer__copy">&copy; ${new Date().getFullYear()} Optician's Desk</span>
+          </div>
+
+          <!-- Disclaimer -->
+          <div class="odb-footer__panel" id="odb-panel-disclaimer">
+            <p class="odb-footer__updated">Last updated: May 2025</p>
+            <div class="odb-footer__doc-grid">
+              <div class="odb-footer__doc-section">
+                <h3>Clinical use</h3>
+                <p>Optician's Desk provides calculators and reference tools to support qualified dispensing opticians. All outputs are indicative only and must be verified by the treating clinician before use in patient care. This tool does not constitute clinical advice and is not a substitute for professional judgement.</p>
+              </div>
+              <div class="odb-footer__doc-section">
+                <h3>Accuracy</h3>
+                <p>While every effort is made to ensure accuracy, Optician's Desk makes no warranty — express or implied — as to the correctness, completeness, or fitness for purpose of any information provided. Formulae and tolerances reflect standard dispensing practice current at time of publication.</p>
+              </div>
+              <div class="odb-footer__doc-section">
+                <h3>AI-generated content</h3>
+                <p>Some features use artificial intelligence to assist with queries and suggestions. AI outputs may contain errors and should be independently verified against established clinical references before application.</p>
+              </div>
+              <div class="odb-footer__doc-section">
+                <h3>Liability &amp; regulatory</h3>
+                <p>To the fullest extent permitted under New Zealand law, Optician's Desk and its operators accept no liability for any loss or harm arising from reliance on this platform. This tool is not a registered medical device. Use is subject to your obligations under the Health Practitioners Competence Assurance Act 2003.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Privacy -->
+          <div class="odb-footer__panel" id="odb-panel-privacy">
+            <p class="odb-footer__updated">Last updated: May 2025 &middot; New Zealand Privacy Act 2020</p>
+            <div class="odb-footer__doc-grid">
+              <div class="odb-footer__doc-section">
+                <h3>What we collect</h3>
+                <ul>
+                  <li><strong>Account data</strong> — name, email address, and a hashed password on registration.</li>
+                  <li><strong>Payment data</strong> — billing is processed by Stripe. We do not store card details on our servers.</li>
+                  <li><strong>Feedback</strong> — name, email, and message submitted via the feedback form.</li>
+                  <li><strong>AI interaction data</strong> — queries to AI features are processed by a third-party provider. Do not submit identifiable patient data.</li>
+                  <li><strong>Usage data</strong> — anonymised logs to improve the platform.</li>
+                </ul>
+              </div>
+              <div class="odb-footer__doc-section">
+                <h3>How we use it</h3>
+                <ul>
+                  <li>To operate and maintain your account</li>
+                  <li>To process membership payments via Stripe</li>
+                  <li>To respond to feedback and support requests</li>
+                  <li>To improve platform features</li>
+                </ul>
+                <br/>
+                <h3>Calculator inputs</h3>
+                <p>Prescription values entered into calculators are processed entirely in your browser. We do not transmit or store this data unless you explicitly save it to your account.</p>
+              </div>
+              <div class="odb-footer__doc-section">
+                <h3>Third parties</h3>
+                <p>We use Stripe for payment processing and a third-party AI provider for AI-assisted features. Each operates under its own privacy policy. We do not sell your data.</p>
+                <br/>
+                <h3>Your rights</h3>
+                <p>Under the Privacy Act 2020 you have the right to access and correct personal information we hold. Contact us at <a href="mailto:hello@opticiansdesk.co.nz">hello@opticiansdesk.co.nz</a> or the <a href="https://privacy.org.nz" target="_blank" rel="noopener">Office of the Privacy Commissioner</a> if you have a concern.</p>
+              </div>
+              <div class="odb-footer__doc-section">
+                <h3>Data retention</h3>
+                <p>Account data is retained while your account is active and may be deleted on request. Anonymised usage logs may be retained indefinitely.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feedback -->
+          <div class="odb-footer__panel" id="odb-panel-feedback">
+            <div class="odb-footer__form-grid" id="odb-feedback-form">
+              <div class="odb-footer__field">
+                <label for="odb-fb-name">Name</label>
+                <input type="text" id="odb-fb-name" placeholder="Your name" autocomplete="name" />
+              </div>
+              <div class="odb-footer__field">
+                <label for="odb-fb-email">Email</label>
+                <input type="email" id="odb-fb-email" placeholder="you@example.com" autocomplete="email" />
+              </div>
+              <div class="odb-footer__field full">
+                <label for="odb-fb-type">Type</label>
+                <select id="odb-fb-type">
+                  <option value="">Select&hellip;</option>
+                  <option value="bug">Bug report</option>
+                  <option value="calculator">Calculator issue</option>
+                  <option value="feature">Feature request</option>
+                  <option value="data">Lens data / reference error</option>
+                  <option value="other">General feedback</option>
+                </select>
+              </div>
+              <div class="odb-footer__field full">
+                <label for="odb-fb-msg">Message</label>
+                <textarea id="odb-fb-msg" placeholder="Describe the issue or suggestion&hellip;" maxlength="1000"
+                  oninput="document.getElementById('odb-fb-char').textContent = this.value.length + ' / 1000'"></textarea>
+                <span class="odb-footer__char" id="odb-fb-char">0 / 1000</span>
+              </div>
+              <div class="odb-footer__field full">
+                <label>Overall rating</label>
+                <div class="odb-footer__rating-row" id="odb-rating-row">
+                  <button onclick="ODB.setRating(1)">1</button>
+                  <button onclick="ODB.setRating(2)">2</button>
+                  <button onclick="ODB.setRating(3)">3</button>
+                  <button onclick="ODB.setRating(4)">4</button>
+                  <button onclick="ODB.setRating(5)">5</button>
+                </div>
+              </div>
+              <div class="odb-footer__actions">
+                <button class="odb-footer__submit" onclick="ODB.submitFeedback()">Send feedback</button>
+                <span class="odb-footer__form-note">Your email is used only to follow up on this message.</span>
+              </div>
+            </div>
+            <p class="odb-footer__success" id="odb-fb-success">Thanks — feedback received. We'll be in touch if a follow-up is needed.</p>
+          </div>
+
+          <div class="odb-footer__bottom">
+            <p>Optician's Desk — built for NZ optical dispensing</p>
+            <p>For clinical emergencies contact your professional body or supervisor.</p>
+          </div>
+
+        </div>
       </footer>
     `;
+
+    /* ── Inject dev banner ── */
+    const bannerEl = document.getElementById('odb-header');
+    if (bannerEl) bannerEl.insertAdjacentHTML('beforebegin', devBannerHTML);
 
     /* ── Inject header ── */
     const headerEl = document.getElementById('odb-header');
@@ -324,6 +722,39 @@
 
   /* ── Dark mode toggle (global) ── */
   window.ODB = {
+    _rating: 0,
+
+    footerTab(id) {
+      document.querySelectorAll('.odb-footer__tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.tab === id);
+      });
+      document.querySelectorAll('.odb-footer__panel').forEach(p => {
+        p.classList.toggle('active', p.id === 'odb-panel-' + id);
+      });
+    },
+
+    setRating(n) {
+      this._rating = n;
+      document.querySelectorAll('#odb-rating-row button').forEach((b, i) => {
+        b.classList.toggle('selected', i < n);
+      });
+    },
+
+    submitFeedback() {
+      const name  = (document.getElementById('odb-fb-name')  || {}).value || '';
+      const email = (document.getElementById('odb-fb-email') || {}).value || '';
+      const type  = (document.getElementById('odb-fb-type')  || {}).value || '';
+      const msg   = (document.getElementById('odb-fb-msg')   || {}).value || '';
+      if (!email.trim() || !msg.trim()) { alert('Please enter your email and a message.'); return; }
+      const subject = encodeURIComponent('[Opticians Desk] ' + (type || 'Feedback'));
+      const body = encodeURIComponent('Name: ' + (name || 'Not provided') + '\nType: ' + (type || '—') + '\nRating: ' + (this._rating || '—') + '/5\n\n' + msg.trim());
+      window.open('mailto:hello@opticiansdesk.co.nz?subject=' + subject + '&body=' + body);
+      const form = document.getElementById('odb-feedback-form');
+      const success = document.getElementById('odb-fb-success');
+      if (form) form.style.display = 'none';
+      if (success) success.classList.add('show');
+    },
+
     toggleDark() {
       const dark = document.body.classList.toggle('dark');
       const label = dark ? 'Day Mode' : 'Night Mode';
