@@ -45,15 +45,17 @@ const db = mysql.createPool({
   connectionLimit:    10
 });
 
-// Test connection on startup
-db.getConnection((err, conn) => {
-  if (err) {
-    console.error("Database connection failed:", err.message);
-    process.exit(1);
-  }
-  console.log("Connected to MySQL");
-  conn.release();
-});
+// Test connection on startup -Redploy when DB ready
+//db.getConnection((err, conn) => {
+ // if (err) {
+//    console.error("Database connection failed:", err.message);
+ //   process.exit(1);
+//  }
+ // console.log("Connected to MySQL");
+ // conn.release();
+//});
+
+console.error("Database connection failed — running without DB");
 
 // ── JWT secrets ───────────────────────────────────────────────
 const JWT_SECRET = process.env.JWT_SECRET;
