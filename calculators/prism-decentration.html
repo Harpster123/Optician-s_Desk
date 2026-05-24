@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prism & Decentration • Optician's Desk</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css" />
+
+  <style>
+    :root {
+      --forest: #1a2e26;
+      --pine:   #2f4a3e;
+      --sage:   #5f776c;
+      --mist:   #e8eeeb;
+      --ink:    #1a1f1c;
+      --ink-2:  #4a5450;
+      --line:   rgba(0,0,0,0.07);
+      --bg:     #f0f3f1;
+      --card:   #ffffff;
+      --radius: 14px;
+    }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(47,74,62,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 110%, rgba(95,119,108,0.06) 0%, transparent 60%);
+      color: var(--ink);
+      min-height: 100vh;
+      margin: 0;
+    }
+
+
+    .calc-page {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 40px 32px 80px;
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: var(--sage);
+      margin-bottom: 24px;
+    }
+
+    .breadcrumb a { color: var(--sage); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--pine); }
+    .breadcrumb__sep { opacity: 0.4; }
+
+    .calc-title { margin-bottom: 32px; }
+
+    .calc-title__eyebrow {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--sage);
+      margin-bottom: 8px;
+    }
+
+    .calc-title h1 {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 2rem;
+      color: var(--forest);
+      margin: 0 0 8px;
+      line-height: 1.15;
+    }
+
+    .calc-title p {
+      color: var(--ink-2);
+      font-size: 0.95rem;
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    .calc-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid rgba(0,0,0,0.06);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+      padding: 28px;
+      margin-bottom: 16px;
+    }
+
+    .calc-card__title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--sage);
+      margin-bottom: 20px;
+    }
+
+    /* Mode toggle */
+    .mode-toggle {
+      display: flex;
+      background: #f0f3f1;
+      border-radius: 10px;
+      padding: 4px;
+      gap: 4px;
+      margin-bottom: 24px;
+      width: fit-content;
+    }
+
+    .mode-toggle__btn {
+      padding: 8px 18px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      font-size: 0.88rem;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      color: var(--ink-2);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .mode-toggle__btn.active {
+      background: var(--card);
+      color: var(--pine);
+      font-weight: 600;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+    }
+
+    /* Input grid */
+    .input-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 4px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--ink-2);
+    }
+
+    .field .hint {
+      font-size: 0.74rem;
+      color: var(--sage);
+    }
+
+    .field input,
+    .field select {
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1.5px solid rgba(0,0,0,0.08);
+      background: #f8faf9;
+      font-size: 1rem;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%; box-sizing: border-box; min-width: 0;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: var(--sage);
+      box-shadow: 0 0 0 3px rgba(95,119,108,0.12);
+      background: #fff;
+    }
+
+    /* Result strip */
+    .output-result {
+      background: var(--forest);
+      border-radius: 12px;
+      padding: 22px 26px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .output-result__label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 4px;
+    }
+
+    .output-result__val {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 2.2rem;
+      color: #fff;
+      line-height: 1;
+    }
+
+    .copy-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1.5px solid rgba(255,255,255,0.25);
+      background: transparent;
+      color: #fff;
+      font-size: 0.8rem;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .copy-btn:hover { background: rgba(255,255,255,0.1); }
+    .copy-btn.copied { background: rgba(255,255,255,0.2); }
+
+    /* Guidance card */
+    .guidance-card {
+      background: #f4f7f5;
+      border-radius: 12px;
+      border: 1.5px solid rgba(0,0,0,0.06);
+      padding: 18px 20px;
+      margin-bottom: 16px;
+      font-size: 0.88rem;
+      color: var(--ink-2);
+      line-height: 1.65;
+    }
+
+    .guidance-card__label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--sage);
+      margin-bottom: 8px;
+    }
+
+    .guidance-card strong { color: var(--forest); }
+
+    /* Formula note */
+    .formula-note {
+      background: #f4f7f5;
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 0.82rem;
+      color: var(--ink-2);
+      line-height: 1.7;
+    }
+
+    .formula-note strong { color: var(--forest); }
+
+    @media (max-width: 640px) {
+      .calc-page { padding: 24px 18px 60px; }
+      .input-grid { grid-template-columns: 1fr 1fr; }
+      .mode-toggle { width: 100%; }
+      .mode-toggle__btn { flex: 1; text-align: center; }
+      .output-result { flex-direction: column; }
+    }
+
+    @media (max-width: 480px) {
+      .input-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="odb-header"></div>
+
+  <main class="calc-page">
+
+    <div class="breadcrumb">
+      <a href="../index.html">Home</a>
+      <span class="breadcrumb__sep">›</span>
+      <span>Prism &amp; Decentration</span>
+    </div>
+
+    <div class="calc-title">
+      <div class="calc-title__eyebrow">Calculator</div>
+      <h1>Prism &amp; Decentration</h1>
+      <p>Calculate induced prism from decentration, or the decentration needed to achieve a desired prism, using Prentice's rule.</p>
+    </div>
+
+    <!-- Input card -->
+    <div class="calc-card">
+      <div class="calc-card__title">Mode</div>
+
+      <!-- Mode toggle -->
+      <div class="mode-toggle">
+        <button class="mode-toggle__btn active" id="btnPfromC" onclick="setMode('pfromc')">Prism from decentration</button>
+        <button class="mode-toggle__btn" id="btnCfromP" onclick="setMode('cfromp')">Decentration from prism</button>
+      </div>
+
+      <div class="calc-card__title">Inputs</div>
+
+      <div class="input-grid">
+        <div class="field">
+          <label for="power">Lens power F (D)</label>
+          <input id="power" type="number" step="0.25" value="10.00" />
+        </div>
+        <div class="field">
+          <label for="direction">Direction</label>
+          <select id="direction">
+            <option value="H">Horizontal</option>
+            <option value="V">Vertical</option>
+          </select>
+        </div>
+        <div class="field" id="baseField" style="display:none">
+          <label for="base">Base</label>
+          <select id="base"></select>
+        </div>
+      </div>
+
+      <!-- Prism from decentration fields -->
+      <div class="input-grid" id="decentFields">
+        <div class="field">
+          <label for="cent">Decentration c (mm)</label>
+          <input id="cent" type="number" step="0.1" min="0" value="1.0" />
+        </div>
+        <div class="field">
+          <label for="decDir">Decentration direction</label>
+          <select id="decDir"></select>
+        </div>
+      </div>
+
+      <!-- Decentration from prism field -->
+      <div class="input-grid" id="prismFields" style="display:none">
+        <div class="field">
+          <label for="prism">Prism Δ (prism dioptres)</label>
+          <input id="prism" type="number" step="0.25" min="0" value="1.0" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Result -->
+    <div class="output-result">
+      <div>
+        <div class="output-result__label" id="resultLabel">Induced prism</div>
+        <div class="output-result__val" id="result">—</div>
+      </div>
+      <div id="resultDirBlock" style="display:none">
+        <div class="output-result__label">Direction to move</div>
+        <div class="output-result__val" id="resultDir" style="font-size:1.4rem;">—</div>
+      </div>
+      <button class="copy-btn" id="copyBtn">Copy</button>
+    </div>
+
+    <!-- Movement guidance -->
+    <div class="guidance-card">
+      <div class="guidance-card__label">Movement guidance</div>
+      <div id="notes">Enter values above to see guidance.</div>
+    </div>
+
+    <!-- Formula -->
+    <div class="formula-note">
+      <strong>Prism from decentration:</strong> Δ = (c × |F|) ÷ 10 &nbsp;·&nbsp;
+      <strong>Decentration from prism:</strong> c = (10 × Δ) ÷ |F| &nbsp;·&nbsp;
+      Plus lens: base is opposite to decentration direction &nbsp;·&nbsp;
+      Minus lens: base is same as decentration direction
+    </div>
+
+  </main>
+
+  <div id="odb-footer"></div>
+  <script src="../js/components.js"></script>
+
+  <script>
+    let currentMode = 'pfromc';
+
+    function setMode(m) {
+      currentMode = m;
+      document.getElementById('btnPfromC').classList.toggle('active', m === 'pfromc');
+      document.getElementById('btnCfromP').classList.toggle('active', m === 'cfromp');
+      document.getElementById('decentFields').style.display  = m === 'pfromc' ? '' : 'none';
+      document.getElementById('prismFields').style.display   = m === 'cfromp' ? '' : 'none';
+      document.getElementById('baseField').style.display     = m === 'cfromp' ? '' : 'none';
+      document.getElementById('resultDirBlock').style.display = m === 'cfromp' ? '' : 'none';
+      document.getElementById('resultLabel').textContent     = m === 'pfromc' ? 'Induced prism' : 'Required decentration';
+      compute();
+    }
+
+    function populateSelects() {
+      const dir     = document.getElementById('direction').value;
+      const base    = document.getElementById('base');
+      const decDir  = document.getElementById('decDir');
+
+      base.innerHTML   = '';
+      decDir.innerHTML = '';
+
+      if (dir === 'H') {
+        [['BI','Base In (BI)'],['BO','Base Out (BO)']].forEach(([v,t]) => {
+          const o = document.createElement('option'); o.value = v; o.textContent = t; base.appendChild(o);
+        });
+        [['NASAL','Nasal (toward bridge)'],['TEMPORAL','Temporal (toward temple)']].forEach(([v,t]) => {
+          const o = document.createElement('option'); o.value = v; o.textContent = t; decDir.appendChild(o);
+        });
+      } else {
+        [['BU','Base Up (BU)'],['BD','Base Down (BD)']].forEach(([v,t]) => {
+          const o = document.createElement('option'); o.value = v; o.textContent = t; base.appendChild(o);
+        });
+        [['UP','Upward'],['DOWN','Downward']].forEach(([v,t]) => {
+          const o = document.createElement('option'); o.value = v; o.textContent = t; decDir.appendChild(o);
+        });
+      }
+      compute();
+    }
+
+    function baseFromDec(dir, decDir, Fpos) {
+      if (dir === 'H') {
+        // Plus: base opposite to decentration. Minus: base same as decentration.
+        if (decDir === 'NASAL')    return Fpos ? 'BI' : 'BO';
+        else                       return Fpos ? 'BO' : 'BI';
+      } else {
+        // Plus: base same as decentration direction (move up → BU).
+        // Minus: base opposite to decentration direction.
+        if (decDir === 'UP')   return Fpos ? 'BU' : 'BD';
+        else                   return Fpos ? 'BD' : 'BU';
+      }
+    }
+
+    function decFromBase(dir, base, Fpos) {
+      if (dir === 'H') {
+        // Plus: move nasally → BI, temporally → BO. Minus: opposite.
+        if (base === 'BI') return Fpos ? 'NASAL'    : 'TEMPORAL';
+        else               return Fpos ? 'TEMPORAL' : 'NASAL';
+      } else {
+        // Plus: move up → BU, down → BD. Minus: opposite.
+        if (base === 'BU') return Fpos ? 'UP'   : 'DOWN';
+        else               return Fpos ? 'DOWN' : 'UP';
+      }
+    }
+
+    function decLabel(dir, dec) {
+      if (dir === 'H') {
+        return dec === 'NASAL'
+          ? 'nasally (toward bridge)'
+          : 'temporally (toward temple)';
+      }
+      return dec === 'UP' ? 'upward' : 'downward';
+    }
+
+    function decLabelShort(dir, dec) {
+      if (dir === 'H') return dec === 'NASAL' ? 'nasal' : 'temporal';
+      return dec === 'UP' ? 'upward' : 'downward';
+    }
+
+    function compute() {
+      const F    = parseFloat(document.getElementById('power').value) || 0;
+      const dir  = document.getElementById('direction').value;
+      const base = document.getElementById('base').value;
+      const Fpos = F > 0;
+      const Fabs = Math.abs(F);
+
+      if (F === 0) {
+        document.getElementById('result').textContent    = '—';
+        document.getElementById('resultDir').textContent = '—';
+        document.getElementById('notes').textContent     = "Prentice's rule requires a non-zero lens power.";
+        return;
+      }
+      if (currentMode === 'pfromc') {
+        const c      = Math.abs(parseFloat(document.getElementById('cent').value) || 0);
+        const decDir = document.getElementById('decDir').value;
+        const P      = (c * Fabs) / 10;
+        const derivedBase = baseFromDec(dir, decDir, Fpos);
+
+        document.getElementById('result').textContent    = P.toFixed(2) + 'Δ ' + derivedBase;
+        document.getElementById('resultDir').textContent = decLabelShort(dir, decDir);
+        document.getElementById('notes').innerHTML =
+          `Decentering <strong>${decLabel(dir, decDir)}</strong> with a ` +
+          `<strong>${Fpos ? 'plus' : 'minus'} lens</strong> induces ` +
+          `<strong>${P.toFixed(2)}Δ ${derivedBase}</strong>. ` +
+          `Rule: ${Fpos ? 'plus lens — base follows decentration direction (vertical) / opposite (horizontal)' : 'minus lens — base opposite to decentration direction (vertical) / same (horizontal)'}.`;
+
+      } else {
+        const P         = Math.abs(parseFloat(document.getElementById('prism').value) || 0);
+        const c         = (10 * P) / Fabs;
+        const neededDec = decFromBase(dir, base, Fpos);
+
+        document.getElementById('result').textContent    = c.toFixed(2) + ' mm';
+        document.getElementById('resultDir').textContent = decLabelShort(dir, neededDec);
+        document.getElementById('notes').innerHTML =
+          `To achieve <strong>${P.toFixed(2)}Δ ${base}</strong> with F = ${F.toFixed(2)}D, ` +
+          `decenter the lens <strong>${decLabel(dir, neededDec)}</strong> by <strong>${c.toFixed(2)} mm</strong>. ` +
+          `Rule: ${Fpos ? 'plus lens — base follows decentration direction (vertical) / opposite (horizontal)' : 'minus lens — base opposite to decentration direction (vertical) / same (horizontal)'}.`;
+      }
+    }
+
+    document.getElementById('copyBtn').addEventListener('click', function () {
+      navigator.clipboard?.writeText(document.getElementById('result').textContent).catch(() => {});
+      this.textContent = 'Copied!';
+      this.classList.add('copied');
+      setTimeout(() => { this.textContent = 'Copy'; this.classList.remove('copied'); }, 1800);
+    });
+
+    document.getElementById('direction').addEventListener('change', populateSelects);
+    ['power','cent','prism'].forEach(id => {
+      document.getElementById(id).addEventListener('input', compute);
+    });
+    ['base','decDir'].forEach(id => {
+      document.getElementById(id).addEventListener('change', compute);
+    });
+
+    populateSelects();
+    compute();
+  </script>
+
+</body>
+</html>

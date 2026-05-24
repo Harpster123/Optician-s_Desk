@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Oblique Cylinder Effect • Optician's Desk</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css" />
+
+  <style>
+    :root {
+      --forest: #1a2e26;
+      --pine:   #2f4a3e;
+      --sage:   #5f776c;
+      --mist:   #e8eeeb;
+      --ink:    #1a1f1c;
+      --ink-2:  #4a5450;
+      --line:   rgba(0,0,0,0.07);
+      --bg:     #f0f3f1;
+      --card:   #ffffff;
+      --radius: 14px;
+    }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(47,74,62,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 110%, rgba(95,119,108,0.06) 0%, transparent 60%);
+      color: var(--ink);
+      min-height: 100vh;
+      margin: 0;
+    }
+
+
+    .calc-page {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 40px 32px 80px;
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: var(--sage);
+      margin-bottom: 24px;
+    }
+
+    .breadcrumb a { color: var(--sage); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--pine); }
+    .breadcrumb__sep { opacity: 0.4; }
+
+    .calc-title { margin-bottom: 32px; }
+
+    .calc-title__eyebrow {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--sage);
+      margin-bottom: 8px;
+    }
+
+    .calc-title h1 {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 2rem;
+      color: var(--forest);
+      margin: 0 0 8px;
+      line-height: 1.15;
+    }
+
+    .calc-title p {
+      color: var(--ink-2);
+      font-size: 0.95rem;
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    .calc-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid rgba(0,0,0,0.06);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+      padding: 28px;
+      margin-bottom: 16px;
+    }
+
+    .calc-card__title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--sage);
+      margin-bottom: 20px;
+    }
+
+    .input-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--ink-2);
+    }
+
+    .field .hint {
+      font-size: 0.74rem;
+      color: var(--sage);
+    }
+
+    .field input {
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1.5px solid rgba(0,0,0,0.08);
+      background: #f8faf9;
+      font-size: 1rem;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%; box-sizing: border-box; min-width: 0;
+    }
+
+    .field input:focus {
+      border-color: var(--sage);
+      box-shadow: 0 0 0 3px rgba(95,119,108,0.12);
+      background: #fff;
+    }
+
+    /* Result strip */
+    .output-result {
+      background: var(--forest);
+      border-radius: 12px;
+      padding: 22px 26px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .output-result__label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 4px;
+    }
+
+    .output-result__val {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 2.4rem;
+      color: #fff;
+      line-height: 1;
+    }
+
+    .copy-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1.5px solid rgba(255,255,255,0.25);
+      background: transparent;
+      color: #fff;
+      font-size: 0.8rem;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .copy-btn:hover { background: rgba(255,255,255,0.1); }
+    .copy-btn.copied { background: rgba(255,255,255,0.2); }
+
+    /* Working steps */
+    .working-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .working-step {
+      background: #f4f7f5;
+      border-radius: 12px;
+      border: 1.5px solid rgba(0,0,0,0.06);
+      padding: 14px 16px;
+    }
+
+    .working-step__label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--sage);
+      margin-bottom: 6px;
+    }
+
+    .working-step__val {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 1.2rem;
+      color: var(--forest);
+      margin-bottom: 3px;
+    }
+
+    .working-step__sub {
+      font-size: 0.75rem;
+      color: var(--ink-2);
+    }
+
+    /* Boundary reference */
+    .boundary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .boundary-card {
+      background: #f4f7f5;
+      border-radius: 12px;
+      border: 1.5px solid rgba(0,0,0,0.06);
+      padding: 14px 16px;
+    }
+
+    .boundary-card__label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--sage);
+      margin-bottom: 4px;
+    }
+
+    .boundary-card__val {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 1.15rem;
+      color: var(--forest);
+      margin-bottom: 3px;
+    }
+
+    .boundary-card__desc {
+      font-size: 0.75rem;
+      color: var(--ink-2);
+    }
+
+    .formula-note {
+      background: #f4f7f5;
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 0.82rem;
+      color: var(--ink-2);
+      line-height: 1.7;
+    }
+
+    .formula-note strong { color: var(--forest); }
+
+    @media (max-width: 640px) {
+      .calc-page { padding: 24px 18px 60px; }
+      .input-grid { grid-template-columns: 1fr 1fr; }
+      .working-grid { grid-template-columns: 1fr; }
+      .boundary-grid { grid-template-columns: 1fr; }
+      .output-result { flex-direction: column; }
+    }
+
+    @media (max-width: 480px) {
+      .input-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="odb-header"></div>
+
+  <main class="calc-page">
+
+    <div class="breadcrumb">
+      <a href="../index.html">Home</a>
+      <span class="breadcrumb__sep">›</span>
+      <span>Oblique Cylinder Effect</span>
+    </div>
+
+    <div class="calc-title">
+      <div class="calc-title__eyebrow">Calculator</div>
+      <h1>Oblique Cylinder Effect</h1>
+      <p>Calculate the power of a sphero-cylindrical lens at any given meridian. Useful for understanding toric optics and cross-cylinder reasoning.</p>
+    </div>
+
+    <!-- Inputs -->
+    <div class="calc-card">
+      <div class="calc-card__title">Prescription &amp; target meridian</div>
+      <div class="input-grid">
+        <div class="field">
+          <label for="sphere">Sphere (D)</label>
+          <input id="sphere" type="number" step="0.25" value="-2.00" />
+        </div>
+        <div class="field">
+          <label for="cyl">Cylinder (D)</label>
+          <input id="cyl" type="number" step="0.25" value="-1.50" />
+        </div>
+        <div class="field">
+          <label for="axis">Cylinder axis α (°)</label>
+          <input id="axis" type="number" step="1" min="1" max="180" value="180" />
+          <span class="hint">1–180°</span>
+        </div>
+        <div class="field">
+          <label for="theta">Target meridian θ (°)</label>
+          <input id="theta" type="number" step="1" min="1" max="180" value="90" />
+          <span class="hint">Meridian to evaluate</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Result -->
+    <div class="output-result">
+      <div>
+        <div class="output-result__label">Power at θ = <span id="labelTheta">90</span>°</div>
+        <div class="output-result__val" id="outPower">—</div>
+      </div>
+      <button class="copy-btn" id="copyBtn">Copy</button>
+    </div>
+
+    <!-- Formula -->
+    <div class="formula-note">
+      <strong>F(θ) = S + C · sin²(θ − α)</strong> &nbsp;·&nbsp;
+      At the cyl axis: F = S &nbsp;·&nbsp;
+      At axis + 90°: F = S + C (the strong meridian)
+    </div>
+
+  </main>
+
+<div id="odb-footer"></div>
+<script src="../js/components.js"></script>
+
+  <script>
+    const $ = s => document.querySelector(s);
+    const num = id => { const v = parseFloat(document.getElementById(id).value); return isNaN(v) ? 0 : v; };
+
+    function normAxis(a) {
+      let v = ((a % 180) + 180) % 180;
+      return v === 0 ? 180 : v;
+    }
+
+    function fmtD(x) {
+      return (x >= 0 ? '+' : '−') + Math.abs(x).toFixed(2) + ' D';
+    }
+
+    function compute() {
+      const S     = num('sphere');
+      const C     = num('cyl');
+      const alpha = normAxis(num('axis'));
+      const theta = normAxis(num('theta'));
+
+      const delta   = theta - alpha;
+      const rad     = delta * Math.PI / 180;
+      const sin2    = Math.pow(Math.sin(rad), 2);
+      const Csin2   = C * sin2;
+      const Ftheta  = S + Csin2;
+
+      const axis90  = normAxis(alpha + 90);
+
+      // Update result
+      document.getElementById('labelTheta').textContent = theta;
+      document.getElementById('outPower').textContent   = fmtD(Ftheta);
+    }
+
+    document.getElementById('copyBtn').addEventListener('click', function () {
+      const text = document.getElementById('outPower').textContent;
+      navigator.clipboard?.writeText(text).catch(() => {});
+      this.textContent = 'Copied!';
+      this.classList.add('copied');
+      setTimeout(() => { this.textContent = 'Copy'; this.classList.remove('copied'); }, 1800);
+    });
+
+    ['sphere','cyl','axis','theta'].forEach(id => {
+      document.getElementById(id).addEventListener('input', compute);
+    });
+
+    compute();
+  </script>
+
+</body>
+</html>

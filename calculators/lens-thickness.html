@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lens Thickness Estimator • Optician's Desk</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css" />
+
+  <style>
+    :root {
+      --forest: #1a2e26;
+      --pine:   #2f4a3e;
+      --sage:   #5f776c;
+      --mist:   #e8eeeb;
+      --ink:    #1a1f1c;
+      --ink-2:  #4a5450;
+      --line:   rgba(0,0,0,0.07);
+      --bg:     #f0f3f1;
+      --card:   #ffffff;
+      --radius: 14px;
+    }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(47,74,62,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 110%, rgba(95,119,108,0.06) 0%, transparent 60%);
+      color: var(--ink);
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    .odb-header {
+      background: var(--forest);
+      position: sticky; top: 0; z-index: 50;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.18);
+    }
+
+    .odb-header__inner {
+      max-width: 1280px; margin: 0 auto; padding: 0 32px;
+      height: 60px; display: flex; align-items: center;
+      justify-content: space-between; gap: 24px;
+    }
+
+    .odb-brand {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 1.15rem; color: #fff; text-decoration: none;
+    }
+
+    .odb-brand span {
+      color: rgba(255,255,255,0.4); font-family: 'DM Sans', sans-serif;
+      font-size: 0.75rem; font-weight: 400; margin-left: 10px;
+      letter-spacing: 0.08em; text-transform: uppercase;
+    }
+
+    .odb-nav { display: flex; align-items: center; gap: 4px; }
+
+    .odb-nav a {
+      color: rgba(255,255,255,0.6); text-decoration: none;
+      font-size: 0.88rem; font-weight: 500; padding: 6px 14px;
+      border-radius: 8px; transition: color 0.15s, background 0.15s;
+    }
+
+    .odb-nav a:hover { color: #fff; background: rgba(255,255,255,0.08); }
+
+    .calc-page {
+      max-width: 860px; margin: 0 auto; padding: 40px 32px 80px;
+    }
+
+    .breadcrumb {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.8rem; color: var(--sage); margin-bottom: 24px;
+    }
+
+    .breadcrumb a { color: var(--sage); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--pine); }
+    .breadcrumb__sep { opacity: 0.4; }
+
+    .calc-title { margin-bottom: 32px; }
+
+    .calc-title__eyebrow {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--sage); margin-bottom: 8px;
+    }
+
+    .calc-title h1 {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 2rem; color: var(--forest); margin: 0 0 8px; line-height: 1.15;
+    }
+
+    .calc-title p { color: var(--ink-2); font-size: 0.95rem; margin: 0; line-height: 1.6; }
+
+    /* Cards */
+    .calc-card {
+      background: var(--card); border-radius: var(--radius);
+      border: 1px solid rgba(0,0,0,0.06);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+      padding: 28px; margin-bottom: 16px;
+    }
+
+    .calc-card__title {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--sage); margin-bottom: 20px;
+    }
+
+    /* Input grid */
+    .input-grid {
+      display: grid; gap: 16px; margin-bottom: 16px;
+    }
+
+    .g2 { grid-template-columns: repeat(2, 1fr); }
+    .g3 { grid-template-columns: repeat(3, 1fr); }
+    .g4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+
+    .field label { font-size: 0.8rem; font-weight: 600; color: var(--ink-2); }
+
+    .field .hint { font-size: 0.74rem; color: var(--sage); line-height: 1.4; }
+
+    .field input,
+    .field select {
+      padding: 10px 14px; border-radius: 10px;
+      border: 1.5px solid rgba(0,0,0,0.08); background: #f8faf9;
+      font-size: 1rem; font-family: 'DM Sans', sans-serif; color: var(--ink);
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%; box-sizing: border-box; min-width: 0;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: var(--sage);
+      box-shadow: 0 0 0 3px rgba(95,119,108,0.12);
+      background: #fff;
+    }
+
+    /* Base curve row */
+    .base-row { display: flex; gap: 8px; align-items: center; }
+    .base-row input { flex: 1; }
+
+    .reset-btn {
+      padding: 10px 12px; border-radius: 10px;
+      border: 1.5px solid rgba(0,0,0,0.08); background: #f8faf9;
+      font-size: 0.78rem; font-family: 'DM Sans', sans-serif;
+      color: var(--sage); font-weight: 600; cursor: pointer;
+      white-space: nowrap; transition: all 0.15s;
+    }
+
+    .reset-btn:hover { background: var(--mist); border-color: var(--sage); }
+
+    /* Toggle switch for auto MBS */
+    .toggle-row {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 0.88rem; color: var(--ink-2);
+    }
+
+    .toggle-switch {
+      position: relative; width: 40px; height: 22px; flex-shrink: 0;
+    }
+
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+
+    .toggle-switch__track {
+      position: absolute; inset: 0; border-radius: 999px;
+      background: #c8d4ce; cursor: pointer; transition: background 0.2s;
+    }
+
+    .toggle-switch input:checked + .toggle-switch__track { background: var(--sage); }
+
+    .toggle-switch__track::before {
+      content: ''; position: absolute;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: #fff; left: 3px; top: 3px;
+      transition: transform 0.2s;
+    }
+
+    .toggle-switch input:checked + .toggle-switch__track::before { transform: translateX(18px); }
+
+    /* Result strip */
+    .output-result {
+      background: var(--forest); border-radius: 12px;
+      padding: 22px 26px; display: flex; align-items: center;
+      justify-content: space-between; gap: 16px; flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .output-result__label {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 4px;
+    }
+
+    .output-result__val {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 2.4rem; color: #fff; line-height: 1;
+    }
+
+    .copy-btn {
+      padding: 8px 16px; border-radius: 8px;
+      border: 1.5px solid rgba(255,255,255,0.25);
+      background: transparent; color: #fff;
+      font-size: 0.8rem; font-family: 'DM Sans', sans-serif;
+      font-weight: 600; cursor: pointer; transition: all 0.15s;
+    }
+
+    .copy-btn:hover { background: rgba(255,255,255,0.1); }
+    .copy-btn.copied { background: rgba(255,255,255,0.2); }
+
+    /* MBS summary pills */
+    .mbs-summary {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;
+    }
+
+    .mbs-pill {
+      padding: 5px 12px; border-radius: 999px;
+      background: #f4f7f5; border: 1px solid rgba(0,0,0,0.07);
+      font-size: 0.78rem; color: var(--ink-2);
+    }
+
+    .mbs-pill strong { color: var(--pine); }
+
+    /* Warning */
+    .warn-box {
+      background: #fef9f0; border: 1px solid #f0c060;
+      border-radius: 10px; padding: 12px 16px;
+      font-size: 0.85rem; color: #7a5500;
+      margin-bottom: 16px; display: none;
+    }
+
+    /* Across indices table */
+    .across-table {
+      width: 100%; border-collapse: collapse; font-size: 0.88rem;
+    }
+
+    .across-table th {
+      text-align: left; font-size: 0.72rem; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--sage); padding: 0 12px 10px;
+    }
+
+    .across-table td {
+      padding: 9px 12px; border-top: 1px solid rgba(0,0,0,0.05);
+      color: var(--ink);
+    }
+
+    .across-table tr[data-index] { cursor: pointer; transition: background 0.15s; }
+    .across-table tr[data-index]:hover { background: #f4f7f5; }
+    .across-table tr[data-index].current { background: var(--mist); }
+
+    .across-table td .bc-badge {
+      display: inline-block; padding: 2px 8px;
+      border-radius: 999px; background: var(--mist);
+      color: var(--pine); font-size: 0.75rem; font-weight: 600;
+    }
+
+    .across-table td .warn-flag { color: #b45309; font-size: 0.78rem; }
+
+    .across-note {
+      font-size: 0.78rem; color: var(--sage);
+      margin-bottom: 12px; line-height: 1.5;
+    }
+
+    /* Formula note */
+    .formula-note {
+      background: #f4f7f5; border-radius: 10px;
+      padding: 14px 18px; font-size: 0.82rem;
+      color: var(--ink-2); line-height: 1.7;
+    }
+
+    .formula-note strong { color: var(--forest); }
+
+    @media (max-width: 700px) {
+      .calc-page { padding: 24px 18px 60px; }
+      .g3 { grid-template-columns: 1fr 1fr; }
+      .g4 { grid-template-columns: 1fr 1fr; }
+      .g2 { grid-template-columns: 1fr; }
+      .output-result { flex-direction: column; }
+      .mbs-summary { gap: 6px; }
+    }
+
+    @media (max-width: 480px) {
+      .g3, .g4 { grid-template-columns: 1fr; }
+      .base-row { flex-direction: column; align-items: stretch; }
+      .reset-btn { width: 100%; text-align: center; }
+      .output-result__val { font-size: 1.9rem; }
+      .across-table { font-size: 0.82rem; }
+      .across-table th, .across-table td { padding: 8px 8px; }
+    }
+    /* ── Dark mode: across-indices table ── */
+    body.dark .across-table th { color: #5f776c; }
+    body.dark .across-table td { color: #c8ddd6; border-color: rgba(255,255,255,0.05); }
+    body.dark .across-table tr[data-index]:hover { background: #1c2e28; }
+    body.dark .across-table tr[data-index].current { background: #1a3028; }
+    body.dark .across-table td .bc-badge { background: #263028; color: #8aada0; }
+    body.dark .across-note { color: #5f776c; }
+    body.dark .formula-note { background: #1c2620; color: #7a9488; }
+    body.dark .formula-note strong { color: #a8c4bc; }
+  </style>
+</head>
+<body>
+
+<div id="odb-header"></div>
+
+  <main class="calc-page">
+
+    <div class="breadcrumb">
+      <a href="../index.html">Home</a>
+      <span class="breadcrumb__sep">›</span>
+      <span>Lens Thickness</span>
+    </div>
+
+    <div class="calc-title">
+      <div class="calc-title__eyebrow">Calculator</div>
+      <h1>Lens Thickness Estimator</h1>
+      <p>Thin-lens, two-surface sag estimate of edge thickness (minus lenses) or centre thickness (plus lenses). Results are approximate — always verify with your lab minimums.</p>
+    </div>
+
+    <!-- Prescription & lens -->
+    <div class="calc-card">
+      <div class="calc-card__title">Prescription &amp; lens</div>
+      <div class="input-grid g4">
+        <div class="field">
+          <label for="power">Power F (D)</label>
+          <input id="power" type="number" step="0.25" value="-4.00" />
+        </div>
+        <div class="field">
+          <label for="nidx">Refractive index</label>
+          <select id="nidx">
+            <option value="1.50">1.50 — CR-39</option>
+            <option value="1.59">1.59 — Trivex</option>
+            <option value="1.60" selected>1.60 — MR-8</option>
+            <option value="1.67">1.67 — MR-10</option>
+            <option value="1.74">1.74 — MR-174</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="base">Front base curve (D)</label>
+          <div class="base-row">
+            <input id="base" type="number" step="0.25" value="5.00" />
+            <button class="reset-btn" id="resetBase" type="button">Reset</button>
+          </div>
+          <span class="hint">Auto-set by index. Override if your lab differs.</span>
+        </div>
+        <div class="field">
+          <label for="eye">Eye</label>
+          <select id="eye">
+            <option value="OD">Right (OD)</option>
+            <option value="OS">Left (OS)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="input-grid g2">
+        <div class="field">
+          <label for="ct">Centre thickness CT (mm)</label>
+          <input id="ct" type="number" step="0.1" value="1.5" />
+          <span class="hint">Used for minus lenses. Lab minimums typically 1.2–1.8 mm.</span>
+        </div>
+        <div class="field">
+          <label for="etmin">Minimum edge thickness ET (mm)</label>
+          <input id="etmin" type="number" step="0.1" value="1.5" />
+          <span class="hint">Used for plus lenses to estimate centre thickness.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Diameter -->
+    <div class="calc-card">
+      <div class="calc-card__title">Diameter</div>
+
+      <div style="margin-bottom: 20px;">
+        <label class="toggle-row">
+          <label class="toggle-switch">
+            <input type="checkbox" id="autoMBS" checked />
+            <span class="toggle-switch__track"></span>
+          </label>
+          Calculate diameter from frame measurements &amp; monocular PD
+        </label>
+      </div>
+
+      <div id="frameInputs">
+        <div class="input-grid g4">
+          <div class="field">
+            <label for="A">Frame A (mm)</label>
+            <input id="A" type="number" step="0.5" value="54" />
+          </div>
+          <div class="field">
+            <label for="DBL">DBL / Bridge (mm)</label>
+            <input id="DBL" type="number" step="0.5" value="18" />
+          </div>
+          <div class="field">
+            <label for="ED">Effective diameter ED (mm)</label>
+            <input id="ED" type="number" step="0.5" value="62" />
+          </div>
+          <div class="field">
+            <label for="safety">Safety allowance (mm)</label>
+            <input id="safety" type="number" step="0.5" value="2" />
+          </div>
+        </div>
+        <div class="input-grid g2">
+          <div class="field">
+            <label for="PD_R">Monocular PD — Right (mm)</label>
+            <input id="PD_R" type="number" step="0.5" value="32" />
+          </div>
+          <div class="field">
+            <label for="PD_L">Monocular PD — Left (mm)</label>
+            <input id="PD_L" type="number" step="0.5" value="32" />
+          </div>
+        </div>
+      </div>
+
+      <div id="manualDiamField" style="display:none;">
+        <div class="input-grid g2">
+          <div class="field">
+            <label for="diam">Diameter (mm)</label>
+            <input id="diam" type="number" step="0.5" value="65" />
+          </div>
+        </div>
+      </div>
+
+      <!-- MBS summary -->
+      <div class="mbs-summary" id="mbsSummary"></div>
+    </div>
+
+    <!-- Warning -->
+    <div class="warn-box" id="warnBox"></div>
+
+    <!-- Result -->
+    <div class="output-result">
+      <div>
+        <div class="output-result__label" id="resultLabel">Estimated edge thickness</div>
+        <div class="output-result__val" id="mainOut">—</div>
+      </div>
+      <button class="copy-btn" id="copyBtn">Copy</button>
+    </div>
+
+    <!-- Across indices -->
+    <div class="calc-card">
+      <div class="calc-card__title">Across indices</div>
+      <div class="across-note" id="acrossNote"></div>
+      <table class="across-table" id="acrossTable">
+        <thead>
+          <tr>
+            <th>Index</th>
+            <th>Auto BC</th>
+            <th>Result</th>
+          </tr>
+        </thead>
+        <tbody id="acrossBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Formula -->
+    <div class="formula-note">
+      <strong>Sag:</strong> s = r − √(r² − (⌀/2)²) &nbsp;·&nbsp;
+      <strong>r</strong> = 1000(n−1) / |F| &nbsp;·&nbsp;
+      <strong>Minus:</strong> ET = CT − s₁ − s₂ &nbsp;·&nbsp;
+      <strong>Plus:</strong> CT = ETmin + s₁ + s₂
+    </div>
+
+  </main>
+
+  <div id="odb-footer"></div>
+  <script src="../js/components.js"></script>
+
+  <script>
+    const baseByIndex = { '1.50': 6.00, '1.59': 5.50, '1.60': 5.00, '1.67': 4.50, '1.74': 4.00 };
+    const allIndices  = ['1.50', '1.59', '1.60', '1.67', '1.74'];
+    let userEditedBase = false;
+
+    function el(id) { return document.getElementById(id); }
+    function num(id, def = 0) { const v = parseFloat(el(id).value); return isNaN(v) ? def : v; }
+
+    // ── Base curve auto-set ──
+    function applyAutoBase() {
+      if (userEditedBase) return;
+      const bc = baseByIndex[el('nidx').value];
+      if (bc !== undefined) el('base').value = bc.toFixed(2);
+    }
+
+    el('nidx').addEventListener('change', () => { applyAutoBase(); compute(); });
+    el('base').addEventListener('input', () => { userEditedBase = true; compute(); });
+    el('resetBase').addEventListener('click', () => { userEditedBase = false; applyAutoBase(); compute(); });
+
+    // ── Auto MBS toggle ──
+    el('autoMBS').addEventListener('change', () => {
+      el('frameInputs').style.display    = el('autoMBS').checked ? '' : 'none';
+      el('manualDiamField').style.display = el('autoMBS').checked ? 'none' : '';
+      compute();
+    });
+
+    // ── Sag helper ──
+    function sag(r, s) {
+      if (!isFinite(r) || r <= 0 || s <= 0) return 0;
+      if (r <= s) return r;
+      return r - Math.sqrt(r * r - s * s);
+    }
+
+    // ── Per-eye MBS ──
+    function calcMBS() {
+      const A      = num('A');
+      const DBL    = num('DBL');
+      const ED     = num('ED');
+      const PDR    = num('PD_R');
+      const PDL    = num('PD_L');
+      const safety = num('safety', 2);
+
+      const halfFramePD = (A + DBL) / 2;
+      const decOD = halfFramePD - PDR;
+      const decOS = halfFramePD - PDL;
+      const mbsOD = ED + 2 * Math.abs(decOD) + safety;
+      const mbsOS = ED + 2 * Math.abs(decOS) + safety;
+
+      return { halfFramePD, decOD, decOS, mbsOD, mbsOS };
+    }
+
+    function getDiameter() {
+      if (el('autoMBS').checked) {
+        const { mbsOD, mbsOS } = calcMBS();
+        return el('eye').value === 'OD' ? mbsOD : mbsOS;
+      }
+      return num('diam', 65);
+    }
+
+    function updateMBSSummary() {
+      const summary = el('mbsSummary');
+      if (!el('autoMBS').checked) { summary.innerHTML = ''; return; }
+      const { halfFramePD, decOD, decOS, mbsOD, mbsOS } = calcMBS();
+      const diam = getDiameter();
+      summary.innerHTML = [
+        `Half frame PD: <strong>${halfFramePD.toFixed(1)} mm</strong>`,
+        `Dec OD: <strong>${decOD.toFixed(1)} mm</strong>`,
+        `Dec OS: <strong>${decOS.toFixed(1)} mm</strong>`,
+        `MBS OD: <strong>${mbsOD.toFixed(1)} mm</strong>`,
+        `MBS OS: <strong>${mbsOS.toFixed(1)} mm</strong>`,
+        `Using: <strong>${diam.toFixed(1)} mm</strong>`,
+      ].map(t => `<div class="mbs-pill">${t}</div>`).join('');
+    }
+
+    // ── Thickness calculation ──
+    function calcThickness(nStr, bcOverride) {
+      const F  = num('power');
+      const n  = parseFloat(nStr);
+      const Bf = bcOverride !== undefined ? bcOverride : num('base');
+      const s  = getDiameter() / 2;
+
+      const F1 = Bf, F2 = F - Bf;
+      const r1 = F1 === 0 ? Infinity : Math.abs(1000 * (n - 1) / F1);
+      const r2 = F2 === 0 ? Infinity : Math.abs(1000 * (n - 1) / F2);
+      const s1 = (F1 >= 0 ? 1 : -1) * sag(r1, s);
+      const s2 = (F2 >= 0 ? 1 : -1) * sag(r2, s);
+
+      if (F < 0) {
+        const CT  = num('ct', 1.5);
+        const raw = CT - s1 - s2;
+        return { kind: 'ET', raw, val: Math.max(raw, 0) };
+      } else {
+        const ETmin = num('etmin', 1.5);
+        const raw   = ETmin + s1 + s2;
+        return { kind: 'CT', raw, val: Math.max(raw, 0) };
+      }
+    }
+
+    // ── Across indices ──
+    function buildAcross() {
+      const F    = num('power');
+      const body = el('acrossBody');
+      const cur  = el('nidx').value;
+      body.innerHTML = '';
+
+      el('acrossNote').textContent = F < 0
+        ? 'Minus power — showing estimated edge thickness (ET) for each index at the same CT.'
+        : 'Plus power — showing estimated centre thickness (CT) for each index at the same ET minimum.';
+
+      allIndices.forEach(n => {
+        const bc = baseByIndex[n];
+        const r  = calcThickness(n, bc);
+        const tr = document.createElement('tr');
+        tr.setAttribute('data-index', n);
+        if (n === cur) tr.classList.add('current');
+
+        const warnFlag = r.raw < 0 ? '<span class="warn-flag">⚠ clamped</span>' : '';
+        tr.innerHTML = `
+          <td>${n}</td>
+          <td><span class="bc-badge">+${bc.toFixed(2)}</span></td>
+          <td>${r.val.toFixed(2)} mm ${r.kind} ${warnFlag}</td>
+        `;
+        tr.addEventListener('click', () => {
+          el('nidx').value = n;
+          userEditedBase   = false;
+          applyAutoBase();
+          compute();
+        });
+        body.appendChild(tr);
+      });
+    }
+
+    // ── Main compute ──
+    function compute() {
+      updateMBSSummary();
+
+      const result = calcThickness(el('nidx').value);
+
+      // Warning
+      const warnBox = el('warnBox');
+      if (result.raw < 0) {
+        warnBox.style.display = '';
+        warnBox.textContent   = result.kind === 'ET'
+          ? '⚠ Edge thickness would be negative. Try increasing CT, flattening the base curve, or reducing the diameter.'
+          : '⚠ Centre thickness would be negative. Try increasing ET minimum, flattening the base curve, or reducing the diameter.';
+      } else {
+        warnBox.style.display = 'none';
+      }
+
+      const F = num('power');
+      el('resultLabel').textContent = F < 0 ? 'Estimated edge thickness' : 'Estimated centre thickness';
+      el('mainOut').textContent     = result.val.toFixed(2) + ' mm';
+
+      buildAcross();
+    }
+
+    // ── Copy ──
+    el('copyBtn').addEventListener('click', function () {
+      navigator.clipboard?.writeText(el('mainOut').textContent).catch(() => {});
+      this.textContent = 'Copied!';
+      this.classList.add('copied');
+      setTimeout(() => { this.textContent = 'Copy'; this.classList.remove('copied'); }, 1800);
+    });
+
+    // ── Live updates ──
+    ['power','ct','etmin','diam','A','DBL','ED','PD_R','PD_L','safety'].forEach(id => {
+      el(id).addEventListener('input', compute);
+    });
+    ['eye'].forEach(id => {
+      el(id).addEventListener('change', compute);
+    });
+
+    applyAutoBase();
+    compute();
+  </script>
+
+</body>
+</html>

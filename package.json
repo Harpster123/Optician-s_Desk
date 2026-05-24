@@ -1,0 +1,30 @@
+{
+  "name": "opticiansdesk",
+  "version": "1.0.0",
+  "description": "Website for opticians desk",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Harpster123/Optician-s_Desk.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Harpster123/Optician-s_Desk/issues"
+  },
+  "homepage": "https://github.com/Harpster123/Optician-s_Desk#readme",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.1.1",
+    "mysql2": "^3.19.0",
+    "sqlite3": "^5.0.2"
+  }
+}

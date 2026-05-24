@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Optical Cross • Optician's Desk</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css" />
+
+  <style>
+    :root {
+      --forest: #1a2e26;
+      --pine:   #2f4a3e;
+      --sage:   #5f776c;
+      --mist:   #e8eeeb;
+      --ink:    #1a1f1c;
+      --ink-2:  #4a5450;
+      --line:   rgba(0,0,0,0.07);
+      --bg:     #f0f3f1;
+      --card:   #ffffff;
+      --radius: 14px;
+    }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(47,74,62,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 110%, rgba(95,119,108,0.06) 0%, transparent 60%);
+      color: var(--ink);
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    .calc-page { max-width: 1100px; margin: 0 auto; padding: 40px 32px 80px; }
+
+    .breadcrumb {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.8rem; color: var(--sage); margin-bottom: 24px;
+    }
+    .breadcrumb a { color: var(--sage); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--pine); }
+    .breadcrumb__sep { opacity: 0.4; }
+
+    .calc-title { margin-bottom: 32px; }
+    .calc-title__eyebrow {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--sage); margin-bottom: 8px;
+    }
+    .calc-title h1 {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 2rem; color: var(--forest); margin: 0 0 8px; line-height: 1.15;
+    }
+    .calc-title p { color: var(--ink-2); font-size: 0.95rem; margin: 0; line-height: 1.6; }
+
+    .calc-card {
+      background: var(--card); border-radius: var(--radius);
+      border: 1px solid rgba(0,0,0,0.06);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+      padding: 28px; margin-bottom: 16px;
+    }
+
+    .calc-card__title {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--sage); margin-bottom: 20px;
+    }
+
+    .rx-grid {
+      display: grid;
+      grid-template-columns: 1fr 1px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .rx-divider { background: var(--line); align-self: stretch; }
+
+    .rx-eye { display: flex; flex-direction: column; gap: 12px; }
+
+    .rx-eye__label {
+      font-size: 0.82rem; font-weight: 700; color: var(--forest);
+      letter-spacing: 0.04em; text-transform: uppercase;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .rx-eye__label span {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--pine); color: #fff; font-size: 0.75rem; font-weight: 700;
+    }
+
+    .rx-fields { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: 0.75rem; font-weight: 600; color: var(--ink-2); }
+    .field input {
+      padding: 9px 12px; border-radius: 10px;
+      border: 1.5px solid rgba(0,0,0,0.08); background: #f8faf9;
+      font-size: 0.95rem; font-family: 'DM Sans', sans-serif; color: var(--ink);
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%; box-sizing: border-box;
+    }
+    .field input:focus {
+      border-color: var(--sage);
+      box-shadow: 0 0 0 3px rgba(95,119,108,0.12); background: #fff;
+    }
+
+    /* Cross section */
+    .cross-section {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 16px; margin-bottom: 16px;
+    }
+
+    .cross-card {
+      background: var(--card); border-radius: var(--radius);
+      border: 1px solid rgba(0,0,0,0.06);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+      padding: 20px 12px 12px;
+    }
+
+    .cross-card__label {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--sage); margin-bottom: 8px;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .cross-card__label span {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: var(--pine); color: #fff; font-size: 0.7rem; font-weight: 700;
+    }
+
+    .cross-wrap svg { width: 100%; height: auto; display: block; }
+
+    /* Power table */
+    .power-card {
+      background: var(--card); border-radius: var(--radius);
+      border: 1px solid rgba(0,0,0,0.06);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+      padding: 24px; margin-bottom: 16px;
+    }
+
+    .power-card__title {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--sage); margin-bottom: 16px;
+    }
+
+    .power-table { width: 100%; border-collapse: collapse; }
+    .power-table th {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--sage);
+      padding: 0 16px 10px; text-align: left;
+    }
+    .power-table th:not(:first-child) { text-align: center; }
+    .power-table td {
+      padding: 12px 16px; border-top: 1px solid rgba(0,0,0,0.05);
+      font-size: 0.88rem; color: var(--ink);
+    }
+    .power-table td:not(:first-child) { text-align: center; }
+    .power-table td:first-child { font-weight: 600; color: var(--ink-2); font-size: 0.85rem; }
+
+    .power-val {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 1.1rem; color: var(--forest);
+    }
+
+    .power-diff { font-size: 0.85rem; color: var(--sage); font-weight: 500; }
+    .power-diff.sig { color: #b45309; font-weight: 700; }
+
+    .aniso-note {
+      background: #f4f7f5; border-radius: 10px;
+      padding: 12px 16px; font-size: 0.8rem;
+      color: var(--sage); font-style: italic; margin-top: 12px;
+    }
+
+    /* Dark mode */
+    body.dark { background: #111916; color: #d8e4df; }
+    body.dark .calc-title h1       { color: #c8ddd6; }
+    body.dark .calc-title p        { color: #7a9488; }
+    body.dark .calc-title__eyebrow { color: #5f776c; }
+    body.dark .breadcrumb, body.dark .breadcrumb a { color: #5f776c; }
+    body.dark .calc-card,
+    body.dark .power-card          { background: #1c2620; border-color: #263028; }
+    body.dark .cross-card          { background: #162420; border-color: #263028; }
+    body.dark .calc-card__title,
+    body.dark .cross-card__label,
+    body.dark .power-card__title   { color: #5f776c; }
+    body.dark .field label         { color: #7a9488; }
+    body.dark .field input         { background: #222e28; border-color: #2e3c36; color: #d8e4df; }
+    body.dark .rx-divider          { background: rgba(255,255,255,0.08); }
+    body.dark .power-val           { color: #c8ddd6; }
+    body.dark .power-table td      { border-color: rgba(255,255,255,0.05); }
+    body.dark .power-table td:first-child { color: #7a9488; }
+    body.dark .aniso-note          { background: #1c2620; color: #5f776c; }
+
+    @media (max-width: 700px) {
+      .calc-page { padding: 24px 16px 60px; }
+      .rx-grid { grid-template-columns: 1fr; }
+      .rx-divider { display: none; }
+      .cross-section { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="odb-header"></div>
+
+  <main class="calc-page">
+
+    <div class="breadcrumb">
+      <a href="../index.html">Home</a>
+      <span class="breadcrumb__sep">›</span>
+      <span>Optical Cross</span>
+    </div>
+
+    <div class="calc-title">
+      <div class="calc-title__eyebrow">Calculator</div>
+      <h1>Optical Cross</h1>
+      <p>Visualise the power in each principal meridian for both eyes. The diagram shows power at 90°, 180°, and the cylinder axis meridians. The table compares 90° and 180° between eyes.</p>
+    </div>
+
+    <div class="calc-card">
+      <div class="calc-card__title">Prescription input</div>
+      <div class="rx-grid">
+
+        <div class="rx-eye">
+          <div class="rx-eye__label"><span>R</span> Right eye (OD)</div>
+          <div class="rx-fields">
+            <div class="field"><label for="r-sph">Sphere (D)</label><input id="r-sph" type="number" step="0.25" value="-2.00" /></div>
+            <div class="field"><label for="r-cyl">Cylinder (D)</label><input id="r-cyl" type="number" step="0.25" value="-1.50" /></div>
+            <div class="field"><label for="r-axis">Axis (°)</label><input id="r-axis" type="number" step="1" min="1" max="180" value="110" /></div>
+          </div>
+        </div>
+
+        <div class="rx-divider"></div>
+
+        <div class="rx-eye">
+          <div class="rx-eye__label"><span>L</span> Left eye (OS)</div>
+          <div class="rx-fields">
+            <div class="field"><label for="l-sph">Sphere (D)</label><input id="l-sph" type="number" step="0.25" value="-1.50" /></div>
+            <div class="field"><label for="l-cyl">Cylinder (D)</label><input id="l-cyl" type="number" step="0.25" value="-1.00" /></div>
+            <div class="field"><label for="l-axis">Axis (°)</label><input id="l-axis" type="number" step="1" min="1" max="180" value="75" /></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="cross-section">
+      <div class="cross-card">
+        <div class="cross-card__label"><span>R</span> Right eye (OD)</div>
+        <div class="cross-wrap">
+          <svg id="cross-r" viewBox="0 0 420 380" fill="none" xmlns="http://www.w3.org/2000/svg"></svg>
+        </div>
+      </div>
+      <div class="cross-card">
+        <div class="cross-card__label"><span>L</span> Left eye (OS)</div>
+        <div class="cross-wrap">
+          <svg id="cross-l" viewBox="0 0 420 380" fill="none" xmlns="http://www.w3.org/2000/svg"></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="power-card">
+      <div class="power-card__title">Power summary — 90° &amp; 180° meridians</div>
+      <table class="power-table">
+        <thead>
+          <tr>
+            <th>Meridian</th>
+            <th>Right (OD)</th>
+            <th>Left (OS)</th>
+            <th>Difference</th>
+          </tr>
+        </thead>
+        <tbody id="power-tbody"></tbody>
+      </table>
+      <div class="aniso-note">Differences ≥ 1.00 D highlighted — may indicate clinically significant anisometropia</div>
+    </div>
+
+  </main>
+
+  <div id="odb-footer"></div>
+  <script src="../js/components.js"></script>
+
+  <script>
+    function el(id) { return document.getElementById(id); }
+    function num(id, def = 0) { const v = parseFloat(el(id).value); return isNaN(v) ? def : v; }
+
+    function normAxis(a) {
+      let v = ((a % 180) + 180) % 180;
+      return v === 0 ? 180 : v;
+    }
+
+    function powerAt(S, C, alpha, theta) {
+      const rad = (theta - alpha) * Math.PI / 180;
+      return S + C * Math.pow(Math.sin(rad), 2);
+    }
+
+    function fmtD(x) {
+      return (x >= 0 ? '+' : '−') + Math.abs(x).toFixed(2) + ' D';
+    }
+
+    function drawCross(svgId, S, C, alpha) {
+      const svg = el(svgId);
+      // Centre with generous padding: labels go top (90) and left (180)
+      // so push centre right and down
+      const cx = 230, cy = 210, r = 90;
+      const arm = r + 30; // shorter arms to reduce clipping risk
+      const dark = document.body.classList.contains('dark');
+      const lineCol    = dark ? '#8aada0' : '#2a2a2a';
+      const axisCol    = dark ? '#5f776c' : '#5f776c';
+      const textCol    = dark ? '#c8ddd6' : '#1a2e26';
+      const dimCol     = dark ? '#4d6860' : '#8a9c95';
+      const circleCol  = dark ? '#2e3e38' : '#dce8e3';
+      const axisPwrCol = dark ? '#7fa898' : '#2f4a3e';
+
+      const p90   = powerAt(S, C, alpha, 90);
+      const p180  = powerAt(S, C, alpha, 180);
+      const pAxis = S;
+      const pPerp = S + C;
+      const perpAngle = normAxis(alpha + 90);
+
+      const svgA = (180 - alpha) * Math.PI / 180;
+      const svgP = svgA + Math.PI / 2;
+
+      // Dashed lines extend slightly beyond circle edge
+      const da = r + 14;
+      const dax1 = cx + da * Math.cos(svgA), day1 = cy - da * Math.sin(svgA);
+      const dax2 = cx - da * Math.cos(svgA), day2 = cy + da * Math.sin(svgA);
+      const dpx1 = cx + da * Math.cos(svgP), dpy1 = cy - da * Math.sin(svgP);
+      const dpx2 = cx - da * Math.cos(svgP), dpy2 = cy + da * Math.sin(svgP);
+
+      // Pick the label end for each dashed axis line —
+      // prefer the end in the bottom-right half (SVG: positive x, positive y)
+      // If the label lands within 10° of the 90° or 180° arm, nudge it sideways
+      function pickEnd(angle) {
+        const lR = r + 24;
+        const e1x = cx + lR * Math.cos(angle), e1y = cy - lR * Math.sin(angle);
+        const e2x = cx - lR * Math.cos(angle), e2y = cy + lR * Math.sin(angle);
+        const use1 = (e1x + e1y) >= (e2x + e2y);
+        let lx = use1 ? e1x : e2x;
+        let ly = use1 ? e1y : e2y;
+        const cosDir = use1 ? Math.cos(angle) : -Math.cos(angle);
+        let anc = cosDir > 0.15 ? 'start' : cosDir < -0.15 ? 'end' : 'middle';
+
+        // Optical angle this end represents
+        const optAngle = normAxis(use1 ? alpha : alpha + 90);
+
+        // Check if within 10° of 90° arm (vertical) — near 80–100°
+        const nearV = (optAngle >= 80 && optAngle <= 100);
+        // Check if within 10° of 180° arm (horizontal) — near 170–180° or 1–10°
+        const nearH = (optAngle >= 170 || optAngle <= 10);
+
+        const nudge = 28;
+
+        if (nearV) {
+          // Axis is near vertical — label is near the top/bottom, push it right
+          lx += nudge;
+          anc = 'start';
+        } else if (nearH) {
+          // Axis is near horizontal — label is near left/right, push it down
+          ly += nudge;
+        }
+
+        return { x: lx, y: ly, anc };
+      }
+
+      const aEnd = pickEnd(svgA);
+      const pEnd = pickEnd(svgP);
+
+      svg.innerHTML = `
+        <circle cx="${cx}" cy="${cy}" r="${r}" stroke="${circleCol}" stroke-width="2" fill="none"/>
+
+        <!-- H arm -->
+        <line x1="${cx-arm}" y1="${cy}" x2="${cx+arm}" y2="${cy}" stroke="${lineCol}" stroke-width="1.6"/>
+        <!-- V arm -->
+        <line x1="${cx}" y1="${cy-arm}" x2="${cx}" y2="${cy+arm}" stroke="${lineCol}" stroke-width="1.6"/>
+
+        <!-- Dashed axis lines -->
+        <line x1="${dax1}" y1="${day1}" x2="${dax2}" y2="${day2}" stroke="${axisCol}" stroke-width="1.4" stroke-dasharray="5 3"/>
+        <line x1="${dpx1}" y1="${dpy1}" x2="${dpx2}" y2="${dpy2}" stroke="${axisCol}" stroke-width="1.4" stroke-dasharray="5 3"/>
+
+        <circle cx="${cx}" cy="${cy}" r="4" fill="${lineCol}"/>
+
+        <!-- 180° label on LEFT end -->
+        <text x="${cx-arm-10}" y="${cy-7}" font-size="13" fill="${textCol}" font-family="DM Serif Display,Georgia,serif" text-anchor="end">${fmtD(p180)}</text>
+        <text x="${cx-arm-10}" y="${cy+8}" font-size="9" fill="${dimCol}" font-family="DM Sans,sans-serif" text-anchor="end">180°</text>
+
+        <!-- 90° label on TOP end -->
+        <text x="${cx}" y="${cy-arm-18}" font-size="13" fill="${textCol}" font-family="DM Serif Display,Georgia,serif" text-anchor="middle">${fmtD(p90)}</text>
+        <text x="${cx}" y="${cy-arm-5}" font-size="9" fill="${dimCol}" font-family="DM Sans,sans-serif" text-anchor="middle">90°</text>
+
+        <!-- Axis power — one end -->
+        <text x="${aEnd.x}" y="${aEnd.y}" font-size="11" fill="${axisPwrCol}" font-family="DM Serif Display,Georgia,serif" text-anchor="${aEnd.anc}" dy="4">${fmtD(pAxis)}</text>
+        <text x="${aEnd.x}" y="${aEnd.y}" font-size="8" fill="${axisCol}" font-family="DM Sans,sans-serif" text-anchor="${aEnd.anc}" dy="17">axis ${alpha}°</text>
+
+        <!-- Perp power — one end -->
+        <text x="${pEnd.x}" y="${pEnd.y}" font-size="11" fill="${axisPwrCol}" font-family="DM Serif Display,Georgia,serif" text-anchor="${pEnd.anc}" dy="4">${fmtD(pPerp)}</text>
+        <text x="${pEnd.x}" y="${pEnd.y}" font-size="8" fill="${axisCol}" font-family="DM Sans,sans-serif" text-anchor="${pEnd.anc}" dy="17">${perpAngle}°</text>
+      `;
+    }
+
+    function buildTable(rRx, lRx) {
+      const { S: rS, C: rC, alpha: rA } = rRx;
+      const { S: lS, C: lC, alpha: lA } = lRx;
+      const tbody = el('power-tbody');
+      tbody.innerHTML = '';
+
+      [{ label: 'Power at 90°', theta: 90 }, { label: 'Power at 180°', theta: 180 }].forEach(m => {
+        const rP = powerAt(rS, rC, rA, m.theta);
+        const lP = powerAt(lS, lC, lA, m.theta);
+        const diff = rP - lP;
+        const sig = Math.abs(diff) >= 1.0;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${m.label}</td>
+          <td><span class="power-val">${fmtD(rP)}</span></td>
+          <td><span class="power-val">${fmtD(lP)}</span></td>
+          <td><span class="power-diff ${sig ? 'sig' : ''}">${(diff >= 0 ? '+' : '−') + Math.abs(diff).toFixed(2)} D</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function compute() {
+      const rS = num('r-sph'), rC = num('r-cyl'), rA = normAxis(num('r-axis', 90));
+      const lS = num('l-sph'), lC = num('l-cyl'), lA = normAxis(num('l-axis', 90));
+      drawCross('cross-r', rS, rC, rA);
+      drawCross('cross-l', lS, lC, lA);
+      buildTable({ S: rS, C: rC, alpha: rA }, { S: lS, C: lC, alpha: lA });
+    }
+
+    ['r-sph','r-cyl','r-axis','l-sph','l-cyl','l-axis'].forEach(id => {
+      el(id).addEventListener('input', compute);
+    });
+
+    compute();
+
+    // Redraw SVGs when dark mode toggles
+    const observer = new MutationObserver(() => compute());
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  </script>
+
+</body>
+</html>

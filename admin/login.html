@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Login — Optician's Desk</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font: 16px/1.5 system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #1e2e27, #3b5f4c);
+      color: #222;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 18px;
+      padding: 40px 36px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 24px 60px rgba(0,0,0,.25);
+    }
+
+    .brand {
+      font-size: .85rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: #2f4a3e;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      margin: 0 0 28px;
+      letter-spacing: -.01em;
+    }
+
+    label {
+      display: block;
+      font-size: .88rem;
+      font-weight: 600;
+      color: #444;
+      margin-bottom: 6px;
+    }
+
+    input {
+      width: 100%;
+      padding: 11px 14px;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+      font-size: 15px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      margin-bottom: 18px;
+    }
+
+    input:focus {
+      border-color: #5f776c;
+      box-shadow: 0 0 0 3px rgba(95,119,108,.15);
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 13px;
+      background: #1f3d33;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: .02em;
+      transition: background .2s;
+    }
+
+    button[type="submit"]:hover { background: #162c25; }
+
+    button[type="submit"]:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+    }
+
+    .error {
+      margin-top: 14px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: #fdecea;
+      color: #b91c1c;
+      font-size: .9rem;
+      display: none;
+    }
+
+    .error.visible { display: block; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">Optician's Desk</div>
+    <h1>Admin Login</h1>
+
+    <label for="username">Username</label>
+    <input type="text" id="username" name="username" autocomplete="username" required />
+
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password" autocomplete="current-password" required />
+
+    <button type="submit" id="login-btn">Sign in</button>
+
+    <div class="error" id="error-msg"></div>
+  </div>
+
+  <script>
+    document.getElementById("login-btn").addEventListener("click", async () => {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+      const btn      = document.getElementById("login-btn");
+      const errEl    = document.getElementById("error-msg");
+
+      errEl.classList.remove("visible");
+
+      if (!username || !password) {
+        errEl.textContent = "Please enter your username and password.";
+        errEl.classList.add("visible");
+        return;
+      }
+
+      btn.disabled    = true;
+      btn.textContent = "Signing in…";
+
+      try {
+        const res = await fetch("/admin/login", {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.ok) {
+          window.location.href = "/admin";
+        } else {
+          errEl.textContent = data.error || "Login failed.";
+          errEl.classList.add("visible");
+          btn.disabled    = false;
+          btn.textContent = "Sign in";
+        }
+      } catch {
+        errEl.textContent = "Network error — please try again.";
+        errEl.classList.add("visible");
+        btn.disabled    = false;
+        btn.textContent = "Sign in";
+      }
+    });
+
+    // Allow Enter key to submit
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") document.getElementById("login-btn").click();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Page Not Found • Optician's Desk</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css" />
+
+  <style>
+    :root {
+      --forest: #1a2e26;
+      --pine:   #2f4a3e;
+      --sage:   #5f776c;
+      --mist:   #e8eeeb;
+      --ink:    #1a1f1c;
+      --ink-2:  #4a5450;
+      --line:   rgba(0,0,0,0.07);
+      --bg:     #f0f3f1;
+      --card:   #ffffff;
+      --radius: 14px;
+    }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(47,74,62,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 110%, rgba(95,119,108,0.06) 0%, transparent 60%);
+      color: var(--ink);
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .odb-header {
+      background: var(--forest);
+      position: sticky; top: 0; z-index: 50;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.18);
+    }
+
+    .odb-header__inner {
+      max-width: 1280px; margin: 0 auto; padding: 0 32px;
+      height: 60px; display: flex; align-items: center;
+      justify-content: space-between; gap: 24px;
+    }
+
+    .odb-brand {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 1.15rem; color: #fff; text-decoration: none;
+    }
+
+    .odb-brand span {
+      color: rgba(255,255,255,0.4); font-family: 'DM Sans', sans-serif;
+      font-size: 0.75rem; font-weight: 400; margin-left: 10px;
+      letter-spacing: 0.08em; text-transform: uppercase;
+    }
+
+    .odb-nav { display: flex; align-items: center; gap: 4px; }
+
+    .odb-nav a {
+      color: rgba(255,255,255,0.6); text-decoration: none;
+      font-size: 0.88rem; font-weight: 500; padding: 6px 14px;
+      border-radius: 8px; transition: color 0.15s, background 0.15s;
+    }
+
+    .odb-nav a:hover { color: #fff; background: rgba(255,255,255,0.08); }
+
+    /* 404 content */
+    .not-found {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 32px;
+    }
+
+    .not-found__inner {
+      max-width: 480px;
+      text-align: center;
+    }
+
+    /* Lens SVG illustration */
+    .not-found__illus {
+      margin: 0 auto 36px;
+      width: 120px;
+      height: 120px;
+      background: #fff;
+      border-radius: 50%;
+      border: 1px solid rgba(0,0,0,0.06);
+      box-shadow: 0 6px 24px rgba(0,0,0,0.07);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .not-found__illus svg {
+      width: 72px;
+      height: 72px;
+    }
+
+    .not-found__code {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 5rem;
+      color: var(--forest);
+      line-height: 1;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+
+    .not-found__title {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 1.5rem;
+      font-weight: 400;
+      color: var(--forest);
+      margin: 0 0 12px;
+    }
+
+    .not-found__title em {
+      font-style: italic;
+      color: var(--sage);
+    }
+
+    .not-found__desc {
+      font-size: 0.95rem;
+      color: var(--ink-2);
+      line-height: 1.65;
+      margin: 0 0 32px;
+    }
+
+    .not-found__links {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      display: inline-block;
+      padding: 11px 24px;
+      border-radius: 10px;
+      background: var(--pine);
+      color: #fff;
+      font-size: 0.9rem;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+
+    .btn-primary:hover { background: var(--forest); }
+
+    .btn-ghost {
+      display: inline-block;
+      padding: 11px 24px;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--pine);
+      border: 1.5px solid rgba(47,74,62,0.3);
+      font-size: 0.9rem;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+
+    .btn-ghost:hover { background: var(--mist); border-color: var(--sage); }
+
+    footer {
+      border-top: 1px solid var(--line);
+      padding: 20px 32px;
+      text-align: center;
+    }
+
+    footer p { font-size: 0.82rem; color: #9aaba5; margin: 0; }
+  </style>
+</head>
+<body>
+
+  <header class="odb-header">
+    <div class="odb-header__inner">
+      <a class="odb-brand" href="../index.html">Optician's Desk <span>NZ</span></a>
+      <nav class="odb-nav">
+        <a href="../index.html">Home</a>
+        <a href="../lenses.html">Lens Database</a>
+        <a href="admin.html">Admin</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="not-found">
+    <div class="not-found__inner">
+
+      <!-- Lens illustration -->
+      <div class="not-found__illus">
+        <svg viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="36" cy="36" r="28" stroke="#3a3a3a" stroke-width="1.4"/>
+          <circle cx="36" cy="36" r="20" stroke="#3a3a3a" stroke-width="0.8" stroke-dasharray="3 3"/>
+          <line x1="10" y1="36" x2="62" y2="36" stroke="#5f776c" stroke-width="1.2"/>
+          <line x1="36" y1="10" x2="36" y2="62" stroke="#5f776c" stroke-width="1.2"/>
+          <!-- Question mark style break in the lines -->
+          <circle cx="36" cy="36" r="3" fill="white" stroke="#3a3a3a" stroke-width="1"/>
+          <!-- X marks -->
+          <line x1="26" y1="26" x2="30" y2="30" stroke="#5f776c" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="30" y1="26" x2="26" y2="30" stroke="#5f776c" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="42" y1="42" x2="46" y2="46" stroke="#5f776c" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="46" y1="42" x2="42" y2="46" stroke="#5f776c" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+      </div>
+
+      <div class="not-found__code">404</div>
+      <h1 class="not-found__title">Page <em>out of focus</em></h1>
+      <p class="not-found__desc">
+        That page doesn't exist or may have moved. Head back to the homepage or jump straight to the lens database.
+      </p>
+
+      <div class="not-found__links">
+        <a class="btn-primary" href="../index.html">Back to home</a>
+        <a class="btn-ghost" href="../lenses.html">Lens database</a>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    <p>Optician's Desk — built for NZ optical dispensing</p>
+  </footer>
+
+</body>
+</html>

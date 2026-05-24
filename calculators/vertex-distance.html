@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vertex Distance Compensation • Optician's Desk</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css" />
+
+  <style>
+    :root {
+      --forest: #1a2e26;
+      --pine:   #2f4a3e;
+      --sage:   #5f776c;
+      --mist:   #e8eeeb;
+      --ink:    #1a1f1c;
+      --ink-2:  #4a5450;
+      --line:   rgba(0,0,0,0.07);
+      --bg:     #f0f3f1;
+      --card:   #ffffff;
+      --radius: 14px;
+    }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(47,74,62,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 110%, rgba(95,119,108,0.06) 0%, transparent 60%);
+      color: var(--ink);
+      min-height: 100vh;
+      margin: 0;
+    }
+
+
+    .calc-page {
+      max-width: 720px; margin: 0 auto; padding: 40px 32px 80px;
+    }
+
+    .breadcrumb {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.8rem; color: var(--sage); margin-bottom: 24px;
+    }
+
+    .breadcrumb a { color: var(--sage); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--pine); }
+    .breadcrumb__sep { opacity: 0.4; }
+
+    .calc-title { margin-bottom: 32px; }
+
+    .calc-title__eyebrow {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--sage); margin-bottom: 8px;
+    }
+
+    .calc-title h1 {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 2rem; color: var(--forest); margin: 0 0 8px; line-height: 1.15;
+    }
+
+    .calc-title p { color: var(--ink-2); font-size: 0.95rem; margin: 0; line-height: 1.6; }
+
+    .calc-card {
+      background: var(--card); border-radius: var(--radius);
+      border: 1px solid rgba(0,0,0,0.06);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+      padding: 28px; margin-bottom: 16px;
+    }
+
+    .calc-card__title {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--sage); margin-bottom: 20px;
+    }
+
+    .input-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 16px; margin-bottom: 4px;
+    }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+
+    .field label { font-size: 0.8rem; font-weight: 600; color: var(--ink-2); }
+
+    .field .hint { font-size: 0.74rem; color: var(--sage); line-height: 1.4; }
+
+    .field input {
+      padding: 10px 14px; border-radius: 10px;
+      border: 1.5px solid rgba(0,0,0,0.08); background: #f8faf9;
+      font-size: 1rem; font-family: 'DM Sans', sans-serif; color: var(--ink);
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%; box-sizing: border-box; min-width: 0;
+    }
+
+    .field input:focus {
+      border-color: var(--sage);
+      box-shadow: 0 0 0 3px rgba(95,119,108,0.12);
+      background: #fff;
+    }
+
+    /* Result strip */
+    .output-result {
+      background: var(--forest); border-radius: 12px;
+      padding: 22px 26px; display: flex; align-items: center;
+      justify-content: space-between; gap: 24px; flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .output-result__left {}
+
+    .output-result__label {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 4px;
+    }
+
+    .output-result__val {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 2.4rem; color: #fff; line-height: 1;
+    }
+
+    .output-result__right { text-align: right; }
+
+    .output-result__rounded-label {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 4px;
+    }
+
+    .output-result__rounded-val {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 1.6rem; color: rgba(255,255,255,0.75); line-height: 1;
+    }
+
+    .copy-btn {
+      padding: 8px 16px; border-radius: 8px;
+      border: 1.5px solid rgba(255,255,255,0.25);
+      background: transparent; color: #fff;
+      font-size: 0.8rem; font-family: 'DM Sans', sans-serif;
+      font-weight: 600; cursor: pointer; transition: all 0.15s;
+      margin-top: 10px; display: block;
+    }
+
+    .copy-btn:hover { background: rgba(255,255,255,0.1); }
+    .copy-btn.copied { background: rgba(255,255,255,0.2); }
+
+    /* Working steps */
+    .steps-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 14px; margin-bottom: 16px;
+    }
+
+    .step-card {
+      background: #f4f7f5; border-radius: 12px;
+      border: 1.5px solid rgba(0,0,0,0.06); padding: 14px 16px;
+    }
+
+    .step-card__label {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.07em;
+      text-transform: uppercase; color: var(--sage); margin-bottom: 6px;
+    }
+
+    .step-card__val {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 1.2rem; color: var(--forest); margin-bottom: 3px;
+    }
+
+    .step-card__working { font-size: 0.78rem; color: var(--ink-2); }
+
+    /* Clinical note */
+    .clinical-note {
+      background: #f4f7f5; border-radius: 10px;
+      padding: 14px 18px; font-size: 0.85rem;
+      color: var(--ink-2); line-height: 1.65;
+      margin-bottom: 16px;
+    }
+
+    .clinical-note strong { color: var(--forest); }
+
+    /* Formula note */
+    .formula-note {
+      background: #f4f7f5; border-radius: 10px;
+      padding: 14px 18px; font-size: 0.82rem;
+      color: var(--ink-2); line-height: 1.7;
+    }
+
+    .formula-note strong { color: var(--forest); }
+
+    @media (max-width: 640px) {
+      .calc-page { padding: 24px 18px 60px; }
+      .input-grid { grid-template-columns: 1fr 1fr; }
+      .steps-grid { grid-template-columns: 1fr; }
+      .output-result { flex-direction: column; }
+      .output-result__right { text-align: left; }
+    }
+
+    @media (max-width: 480px) {
+      .input-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="odb-header"></div>
+
+  <main class="calc-page">
+
+    <div class="breadcrumb">
+      <a href="../index.html">Home</a>
+      <span class="breadcrumb__sep">›</span>
+      <span>Vertex Distance Compensation</span>
+    </div>
+
+    <div class="calc-title">
+      <div class="calc-title__eyebrow">Calculator</div>
+      <h1>Vertex Distance Compensation</h1>
+      <p>Adjust lens power when vertex distance changes — from trial frame to spectacle plane, or between frames. Significant for powers above ±4.00 D.</p>
+    </div>
+
+    <!-- Inputs -->
+    <div class="calc-card">
+      <div class="calc-card__title">Power &amp; vertex distances</div>
+      <div class="input-grid">
+        <div class="field">
+          <label for="power">Lens power F (D)</label>
+          <input id="power" type="number" step="0.25" value="-10.00" />
+        </div>
+        <div class="field">
+          <label for="oldVD">Original vertex distance (mm)</label>
+          <input id="oldVD" type="number" step="0.5" value="12" />
+          <span class="hint">At refraction or original fit</span>
+        </div>
+        <div class="field">
+          <label for="newVD">New vertex distance (mm)</label>
+          <input id="newVD" type="number" step="0.5" value="8" />
+          <span class="hint">At new frame or contact lens plane</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Result -->
+    <div class="output-result">
+      <div class="output-result__left">
+        <div class="output-result__label">Effective power</div>
+        <div class="output-result__val" id="effOut">—</div>
+        <button class="copy-btn" id="copyBtn">Copy</button>
+      </div>
+      <div class="output-result__right">
+        <div class="output-result__rounded-label">Rounded to 0.25 D</div>
+        <div class="output-result__rounded-val" id="roundedOut">—</div>
+      </div>
+    </div>
+
+    <!-- Working steps -->
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-card__label">Vertex shift (d)</div>
+        <div class="step-card__val" id="stepD">—</div>
+        <div class="step-card__working" id="stepDWorking">&nbsp;</div>
+      </div>
+      <div class="step-card">
+        <div class="step-card__label">Power change</div>
+        <div class="step-card__val" id="stepDiff">—</div>
+        <div class="step-card__working" id="stepDiffWorking">&nbsp;</div>
+      </div>
+    </div>
+
+    <!-- Clinical note -->
+    <div class="clinical-note" id="clinicalNote"></div>
+
+    <!-- Formula -->
+    <div class="formula-note">
+      <strong>F<sub>eff</sub> = F ÷ (1 − d · F)</strong> &nbsp;·&nbsp;
+      d = (original VD − new VD) in metres &nbsp;·&nbsp;
+      Compensation significant when |F| &gt; 4.00 D
+    </div>
+
+  </main>
+
+<div id="odb-footer"></div>
+<script src="../js/components.js"></script>
+
+  <script>
+    function el(id) { return document.getElementById(id); }
+    function num(id) { const v = parseFloat(el(id).value); return isNaN(v) ? 0 : v; }
+
+    function fmtD(x) {
+      return (x >= 0 ? '+' : '−') + Math.abs(x).toFixed(2) + ' D';
+    }
+
+    function round025(x) {
+      return Math.round(x / 0.25) * 0.25;
+    }
+
+    function compute() {
+      const F      = num('power');
+      const oldVD  = num('oldVD');
+      const newVD  = num('newVD');
+      const d      = (oldVD - newVD) / 1000; // metres
+      const Feff   = F / (1 - d * F);
+      const Frnd   = round025(Feff);
+      const diff   = Feff - F;
+
+      // Result
+      el('effOut').textContent    = fmtD(Feff);
+      el('roundedOut').textContent = fmtD(Frnd);
+
+      // Working steps
+      el('stepD').textContent        = (d * 1000).toFixed(1) + ' mm';
+      el('stepDWorking').textContent = `${oldVD.toFixed(1)} − ${newVD.toFixed(1)} mm`;
+
+      el('stepDiff').textContent        = fmtD(diff);
+      el('stepDiffWorking').textContent = `F_eff − F`;
+
+      // Clinical note
+      const absF = Math.abs(F);
+      let note = '';
+      if (absF < 4) {
+        note = 'Power is below ±4.00 D — vertex compensation is unlikely to be clinically significant.';
+      } else if (d === 0) {
+        note = 'No vertex shift — effective power equals the original power.';
+      } else {
+        const direction = d > 0 ? 'closer to the eye' : 'further from the eye';
+        const effect    = F < 0
+          ? (d > 0 ? 'reduces minus power (less negative)' : 'increases minus power (more negative)')
+          : (d > 0 ? 'increases plus power (more positive)' : 'reduces plus power (less positive)');
+        note = `Moving the lens <strong>${direction}</strong> by ${Math.abs(d * 1000).toFixed(1)} mm <strong>${effect}</strong>. Compensated power rounds to <strong>${fmtD(Frnd)}</strong>.`;
+      }
+      el('clinicalNote').innerHTML = note;
+    }
+
+    el('copyBtn').addEventListener('click', function () {
+      navigator.clipboard?.writeText(el('effOut').textContent).catch(() => {});
+      this.textContent = 'Copied!';
+      this.classList.add('copied');
+      setTimeout(() => { this.textContent = 'Copy'; this.classList.remove('copied'); }, 1800);
+    });
+
+    ['power', 'oldVD', 'newVD'].forEach(id => {
+      el(id).addEventListener('input', compute);
+    });
+
+    compute();
+  </script>
+
+</body>
+</html>

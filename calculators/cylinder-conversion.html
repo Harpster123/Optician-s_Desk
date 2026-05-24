@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>+ / − Cylinder Conversion • Optician's Desk</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css" />
+
+  <style>
+    :root {
+      --forest: #1a2e26;
+      --pine:   #2f4a3e;
+      --sage:   #5f776c;
+      --mist:   #e8eeeb;
+      --ink:    #1a1f1c;
+      --ink-2:  #4a5450;
+      --line:   rgba(0,0,0,0.07);
+      --bg:     #f0f3f1;
+      --card:   #ffffff;
+      --radius: 14px;
+    }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(47,74,62,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 110%, rgba(95,119,108,0.06) 0%, transparent 60%);
+      color: var(--ink);
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    /* ── Page ── */
+    .calc-page {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 40px 32px 80px;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: var(--sage);
+      margin-bottom: 24px;
+    }
+
+    .breadcrumb a { color: var(--sage); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--pine); }
+    .breadcrumb__sep { opacity: 0.4; }
+
+    /* Page title */
+    .calc-title { margin-bottom: 32px; }
+
+    .calc-title__eyebrow {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--sage);
+      margin-bottom: 8px;
+    }
+
+    .calc-title h1 {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 2rem;
+      color: var(--forest);
+      margin: 0 0 8px;
+      line-height: 1.15;
+    }
+
+    .calc-title p {
+      color: var(--ink-2);
+      font-size: 0.95rem;
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    /* ── Card ── */
+    .calc-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid rgba(0,0,0,0.06);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+      padding: 28px;
+      margin-bottom: 16px;
+    }
+
+    .calc-card__title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--sage);
+      margin-bottom: 18px;
+    }
+
+    /* ── Form ── */
+    .input-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--ink-2);
+      letter-spacing: 0.02em;
+    }
+
+    .field input {
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1.5px solid rgba(0,0,0,0.08);
+      background: #f8faf9;
+      font-size: 1rem;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .field input:focus {
+      border-color: var(--sage);
+      box-shadow: 0 0 0 3px rgba(95,119,108,0.12);
+      background: #fff;
+    }
+
+    /* Options row */
+    .options-row {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .check-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.88rem;
+      color: var(--ink-2);
+      cursor: pointer;
+    }
+
+    .check-label input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--pine);
+      cursor: pointer;
+    }
+
+    .calc-btn {
+      padding: 10px 24px;
+      border-radius: 10px;
+      border: none;
+      background: var(--pine);
+      color: #fff;
+      font-size: 0.9rem;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+      margin-left: auto;
+    }
+
+    .calc-btn:hover { background: var(--forest); }
+
+    /* ── Output card ── */
+
+    .output-card {
+      background: #f4f7f5;
+      border-radius: 12px;
+      border: 1.5px solid rgba(0,0,0,0.06);
+      padding: 20px;
+    }
+
+    .output-card__label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--sage);
+      margin-bottom: 12px;
+    }
+
+    .output-card__rx {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 1.5rem;
+      color: var(--forest);
+      margin-bottom: 16px;
+      letter-spacing: 0.01em;
+      min-height: 2rem;
+    }
+
+    .output-card__rx span {
+      display: inline-block;
+      margin-right: 8px;
+    }
+
+    .output-card__rx .rx-label {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--sage);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      vertical-align: super;
+      margin-right: 2px;
+    }
+
+    .copy-btn {
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: 1.5px solid rgba(0,0,0,0.10);
+      background: #fff;
+      color: var(--pine);
+      font-size: 0.8rem;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .copy-btn:hover { background: var(--mist); border-color: var(--sage); }
+    .copy-btn.copied { background: var(--pine); color: #fff; border-color: var(--pine); }
+
+    /* Formula note */
+    .formula-note {
+      background: #f4f7f5;
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 0.82rem;
+      color: var(--ink-2);
+      line-height: 1.6;
+    }
+
+    .formula-note strong { color: var(--forest); }
+
+    @media (max-width: 600px) {
+      .calc-page { padding: 24px 18px 60px; }
+      .input-grid { grid-template-columns: 1fr; }
+      .output-grid { grid-template-columns: 1fr; }
+      .options-row { gap: 12px; }
+      .calc-btn { margin-left: 0; width: 100%; }
+    }
+
+    /* ── Dark mode ── */
+    body.dark { background: #111916; color: #d8e4df; }
+    body.dark .calc-title h1        { color: #c8ddd6; }
+    body.dark .calc-title p         { color: #7a9488; }
+    body.dark .calc-title__eyebrow  { color: #5f776c; }
+    body.dark .breadcrumb           { color: #5f776c; }
+    body.dark .breadcrumb a         { color: #5f776c; }
+    body.dark .calc-card            { background: #1c2620; border-color: #263028; }
+    body.dark .calc-card__title     { color: #5f776c; }
+    body.dark .field label          { color: #7a9488; }
+    body.dark .field input,
+    body.dark .field select         { background: #222e28; border-color: #2e3c36; color: #d8e4df; }
+    body.dark .field .hint          { color: #4d6860; }
+    body.dark .check-label          { color: #7a9488; }
+    body.dark .output-card          { background: #222e28; border-color: #2e3c36; }
+    body.dark .output-card__label   { color: #5f776c; }
+    body.dark .output-card__rx      { color: #c8ddd6; }
+    body.dark .copy-btn             { background: #1c2620; border-color: #2e3c36; color: #7fa898; }
+    body.dark .formula-note         { background: #1c2620; color: #7a9488; }
+    body.dark .formula-note strong  { color: #a8c4bc; }
+  </style>
+</head>
+<body>
+
+  <div id="odb-header"></div>
+
+  <main class="calc-page">
+
+    <div class="breadcrumb">
+      <a href="../index.html">Home</a>
+      <span class="breadcrumb__sep">›</span>
+      <span>+ / − Cylinder Conversion</span>
+    </div>
+
+    <div class="calc-title">
+      <div class="calc-title__eyebrow">Calculator</div>
+      <h1>+ / − Cylinder Conversion</h1>
+      <p>Enter any prescription and instantly see both plus and minus cylinder forms. Optionally round powers to 0.25 D steps and normalise axis to 1–180°.</p>
+    </div>
+
+    <!-- Input card -->
+    <div class="calc-card">
+      <div class="calc-card__title">Prescription input</div>
+
+      <div class="input-grid">
+        <div class="field">
+          <label for="sphere">Sphere (D)</label>
+          <input id="sphere" type="number" step="0.25" value="-2.00" />
+        </div>
+        <div class="field">
+          <label for="cyl">Cylinder (D)</label>
+          <input id="cyl" type="number" step="0.25" value="-1.50" />
+        </div>
+        <div class="field">
+          <label for="axis">Axis (° 1–180)</label>
+          <input id="axis" type="number" step="1" min="1" max="180" value="90" />
+        </div>
+      </div>
+
+      <div class="options-row">
+        <label class="check-label">
+          <input id="round025" type="checkbox" checked />
+          Round to 0.25 D
+        </label>
+        <label class="check-label">
+          <input id="normAxis" type="checkbox" checked />
+          Normalise axis 1–180°
+        </label>
+        <button class="calc-btn" id="calcBtn" type="button">Convert →</button>
+      </div>
+
+      <!-- Output -->
+      <div class="output-card">
+        <div class="output-card__label" id="outLabel">Converted form</div>
+        <div class="output-card__rx" id="rxOut">—</div>
+        <button class="copy-btn" id="copyBtn" type="button">Copy</button>
+      </div>
+    </div>
+
+    <!-- Formula note -->
+    <div class="formula-note">
+      <strong>Formula:</strong>
+      New sphere = S + C &nbsp;·&nbsp;
+      New cylinder = −C &nbsp;·&nbsp;
+      New axis = axis ± 90° (wrapped to 1–180°)
+    </div>
+
+  </main>
+
+  <div id="odb-footer"></div>
+  <script src="../js/components.js"></script>
+
+  <script>
+    const $ = s => document.querySelector(s);
+
+    function round025(x) {
+      return Math.round(x / 0.25) * 0.25;
+    }
+
+    function normAxis180(a) {
+      let v = ((a % 180) + 180) % 180;
+      return v === 0 ? 180 : v;
+    }
+
+    function fmtDiopter(x) {
+      const sign = x >= 0 ? '+' : '−';
+      return sign + Math.abs(x).toFixed(2);
+    }
+
+    function renderRx(elId, S, C, A) {
+      const el = document.getElementById(elId);
+      el.innerHTML =
+        `<span><span class="rx-label">S</span>${fmtDiopter(S)}</span>` +
+        `<span><span class="rx-label">C</span>${fmtDiopter(C)}</span>` +
+        `<span><span class="rx-label">A</span>${Math.round(A)}°</span>`;
+    }
+
+    function compute() {
+      let S = parseFloat($('#sphere').value) || 0;
+      let C = parseFloat($('#cyl').value)  || 0;
+      let A = parseFloat($('#axis').value)  || 0;
+
+      const doRound = $('#round025').checked;
+      const doNorm  = $('#normAxis').checked;
+
+      if (doNorm) A = normAxis180(A);
+
+      // Transposed values
+      const S2 = S + C;
+      const C2 = -C;
+      const A2 = doNorm ? normAxis180(A + 90) : (A + 90);
+
+      // Show only the converted form
+      let Sc, Cc, Ac, label;
+
+      if (C <= 0) {
+        // Input is minus cyl — show plus form
+        Sc = S2; Cc = C2; Ac = A2;
+        label = 'Plus-cylinder form';
+      } else {
+        // Input is plus cyl — show minus form
+        Sc = S2; Cc = C2; Ac = A2;
+        label = 'Minus-cylinder form';
+      }
+
+      if (doRound) {
+        Sc = round025(Sc);
+        Cc = round025(Cc);
+      }
+
+      document.getElementById('outLabel').textContent = label;
+      renderRx('rxOut', Sc, Cc, Ac);
+    }
+
+    function copyText(elId, btn) {
+      const el = document.getElementById(elId);
+      // Build plain text from the rendered spans
+      const spans = el.querySelectorAll('span > span ~ span, span');
+      // Simpler: grab textContent
+      const text = el.textContent.trim();
+      navigator.clipboard?.writeText(text).catch(() => {});
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1800);
+    }
+
+    $('#calcBtn').addEventListener('click', compute);
+    $('#copyBtn').addEventListener('click', function() { copyText('rxOut', this); });
+
+    // Live update on input change
+    ['sphere','cyl','axis','round025','normAxis'].forEach(id => {
+      document.getElementById(id).addEventListener('input', compute);
+    });
+
+    // Run once on load
+    compute();
+  </script>
+
+</body>
+</html>

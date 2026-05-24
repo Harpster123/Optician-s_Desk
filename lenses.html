@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lens Database — Optician's Desk</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css" />
+
+  <style>
+    :root {
+      --forest:   #1a2e26;
+      --pine:     #2f4a3e;
+      --sage:     #5f776c;
+      --mist:     #e8eeeb;
+      --ink:      #1a1f1c;
+      --ink-2:    #4a5450;
+      --line:     rgba(0,0,0,0.07);
+    }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: #f0f3f1;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(47,74,62,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 110%, rgba(95,119,108,0.06) 0%, transparent 60%);
+      min-height: 100vh;
+    }
+
+    /* ── Page ── */
+    .db-page {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 40px 32px 80px;
+    }
+
+    .db-title { margin-bottom: 28px; }
+
+    .db-title h1 {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 2.2rem;
+      color: var(--forest);
+      margin: 0 0 6px;
+      letter-spacing: -0.01em;
+    }
+
+    .db-title p {
+      color: var(--ink-2);
+      font-size: 0.97rem;
+      margin: 0;
+      max-width: 520px;
+    }
+
+    /* ── Search ── */
+    .search-wrap {
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .search-wrap svg {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--sage);
+      pointer-events: none;
+    }
+
+    .search-wrap input {
+      width: 100%;
+      padding: 14px 18px 14px 46px;
+      border-radius: 14px;
+      border: 1.5px solid rgba(0,0,0,0.08);
+      background: #fff;
+      font-size: 0.95rem;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--ink);
+      outline: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .search-wrap input::placeholder { color: #9aaba5; }
+
+    .search-wrap input:focus {
+      border-color: var(--sage);
+      box-shadow: 0 0 0 3px rgba(95,119,108,0.12);
+    }
+
+    /* ── Filter bar ── */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+      background: #fff;
+      border-radius: 14px;
+      border: 1.5px solid rgba(0,0,0,0.07);
+      padding: 12px 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      flex-wrap: wrap;
+    }
+
+    .filter-section {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .filter-section + .filter-section {
+      padding-left: 16px;
+      border-left: 1px solid var(--line);
+    }
+
+    .filter-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: #8a9c95;
+      white-space: nowrap;
+    }
+
+    .chip-group { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    .chip {
+      padding: 5px 13px;
+      border-radius: 999px;
+      border: 1.5px solid rgba(0,0,0,0.10);
+      background: transparent;
+      font-size: 0.82rem;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      color: var(--ink-2);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .chip:hover  { border-color: var(--sage); color: var(--pine); background: var(--mist); }
+    .chip.active { background: var(--pine); border-color: var(--pine); color: #fff; }
+
+    .clear-btn {
+      padding: 5px 13px;
+      border-radius: 999px;
+      border: 1.5px solid rgba(0,0,0,0.08);
+      background: transparent;
+      font-size: 0.82rem;
+      font-family: 'DM Sans', sans-serif;
+      color: #b91c1c;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .clear-btn:hover { background: #fef2f2; border-color: #fca5a5; }
+
+    .sort-select {
+      margin-left: auto;
+      padding: 7px 12px;
+      border-radius: 10px;
+      border: 1.5px solid rgba(0,0,0,0.08);
+      background: #f8faf9;
+      font-size: 0.85rem;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--ink);
+      cursor: pointer;
+      outline: none;
+    }
+
+    /* ── Layout ── */
+    .db-layout {
+      display: grid;
+      grid-template-columns: 210px 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    /* Left panel */
+    .type-panel {
+      background: #fff;
+      border-radius: 16px;
+      border: 1.5px solid rgba(0,0,0,0.07);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+      overflow: hidden;
+      position: sticky;
+      top: 76px;
+    }
+
+    .type-panel__head {
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .type-panel__head h3 {
+      margin: 0;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: #8a9c95;
+    }
+
+    .type-list {
+      list-style: none;
+      padding: 8px;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .type-btn {
+      width: 100%;
+      text-align: left;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: none;
+      background: transparent;
+      font-size: 0.88rem;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      color: var(--ink-2);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .type-btn:hover { background: var(--mist); color: var(--pine); }
+
+    .type-btn.is-active {
+      background: var(--forest);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    /* Right panel */
+    .lens-panel {
+      background: #fff;
+      border-radius: 16px;
+      border: 1.5px solid rgba(0,0,0,0.07);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+      overflow: hidden;
+    }
+
+    .tbl-head {
+      display: grid;
+      grid-template-columns: 2.4fr 1fr 0.6fr 1.2fr 1.6fr;
+      gap: 12px;
+      padding: 11px 20px;
+      background: #f8faf9;
+      border-bottom: 1.5px solid var(--line);
+      font-size: 0.71rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: #8a9c95;
+    }
+
+    .lens-list-inner { display: flex; flex-direction: column; }
+
+    .lens-item {
+      display: grid;
+      grid-template-columns: 2.4fr 1fr 0.6fr 1.2fr 1.6fr;
+      gap: 12px;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--line);
+      cursor: pointer;
+      transition: background 0.12s;
+      animation: fadeUp 0.2s ease both;
+    }
+
+    .lens-item:last-child { border-bottom: none; }
+    .lens-item:hover { background: #f8faf9; }
+
+    .lens-item.selected {
+      background: #f0f7f4;
+      border-left: 3px solid var(--sage);
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(5px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .lens-item > div {
+      min-width: 0;
+      overflow-wrap: anywhere;
+      font-size: 0.88rem;
+      color: var(--ink-2);
+    }
+
+    .name-cell { display: flex; flex-direction: column; gap: 5px; }
+
+    .lens-name {
+      font-size: 0.93rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .tag-row { display: flex; gap: 4px; flex-wrap: wrap; }
+
+    .tag {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--mist);
+      color: var(--pine);
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .tag:hover  { background: var(--pine); color: #fff; }
+    .tag.active { background: var(--pine); color: #fff; }
+
+    .cmp-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 8px;
+      border: 1.5px solid rgba(95,119,108,0.3);
+      background: transparent;
+      color: var(--sage);
+      font-size: 0.74rem;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-top: 2px;
+      width: fit-content;
+    }
+
+    .cmp-btn:hover { background: var(--pine); border-color: var(--pine); color: #fff; }
+    .cmp-btn.added { background: var(--pine); border-color: var(--pine); color: #fff; }
+
+    .index-badge {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 8px;
+      background: var(--mist);
+      color: var(--pine);
+      font-weight: 600;
+      font-size: 0.83rem;
+    }
+
+    .list-msg {
+      padding: 48px 24px;
+      text-align: center;
+      color: #8a9c95;
+      font-size: 0.92rem;
+    }
+
+    .list-msg .icon { font-size: 1.8rem; margin-bottom: 8px; display: block; }
+
+    /* ── Modal ── */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(20,32,28,0.55);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      animation: fadeIn 0.15s ease;
+    }
+
+    .modal-backdrop.hidden { display: none; }
+
+    @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+
+    .modal-box {
+      background: #fff;
+      border-radius: 20px;
+      padding: 36px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.22);
+      position: relative;
+      animation: slideUp 0.2s ease;
+    }
+
+    @keyframes slideUp {
+      from { opacity:0; transform:translateY(16px) }
+      to   { opacity:1; transform:translateY(0) }
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 16px; right: 16px;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: var(--mist);
+      color: var(--ink-2);
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+    }
+
+    .modal-close:hover { background: #dde6e1; }
+
+    .modal-eyebrow {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--sage);
+      margin-bottom: 4px;
+    }
+
+    .modal-title {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 1.55rem;
+      color: var(--forest);
+      margin: 0 0 20px;
+      line-height: 1.2;
+      padding-right: 32px;
+    }
+
+    .modal-specs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .spec-tile {
+      background: var(--mist);
+      border-radius: 12px;
+      padding: 11px 14px;
+    }
+
+    .spec-tile .lbl {
+      font-size: 0.69rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #8a9c95;
+      margin-bottom: 3px;
+    }
+
+    .spec-tile .val {
+      font-size: 0.93rem;
+      font-weight: 600;
+      color: var(--pine);
+    }
+
+    .modal-desc {
+      font-size: 0.88rem;
+      color: var(--ink-2);
+      line-height: 1.65;
+      margin: 0;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    /* ── Compare bar ── */
+    .cmp-bar {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--forest);
+      color: #fff;
+      padding: 12px 16px 12px 22px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+      z-index: 100;
+      white-space: nowrap;
+    }
+
+    .cmp-bar.hidden { display: none; }
+
+    .cmp-bar__label { font-size: 0.8rem; opacity: 0.55; }
+
+    .cmp-bar__items { display: flex; gap: 6px; }
+
+    .cmp-bar__item {
+      background: rgba(255,255,255,0.12);
+      padding: 4px 11px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .cmp-bar button {
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.18);
+      padding: 7px 16px;
+      border-radius: 999px;
+      color: #fff;
+      font-size: 0.83rem;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .cmp-bar button:hover { background: rgba(255,255,255,0.24); }
+
+    /* ── Compare overlay ── */
+    .cmp-overlay {
+      position: fixed;
+      inset: 0;
+      background: #f0f3f1;
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .cmp-overlay.hidden { display: none; }
+
+    .cmp-overlay__top {
+      background: var(--forest);
+      padding: 18px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .cmp-overlay__top h2 {
+      font-family: 'DM Serif Display', Georgia, serif;
+      color: #fff;
+      margin: 0;
+      font-size: 1.25rem;
+    }
+
+    .cmp-overlay__top button {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #fff;
+      padding: 8px 18px;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .cmp-overlay__top button:hover { background: rgba(255,255,255,0.2); }
+
+    .cmp-cards {
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      gap: 20px;
+      padding: 40px;
+      flex: 1;
+    }
+
+    .cmp-card {
+      flex: 0 1 300px;
+      background: #fff;
+      border-radius: 20px;
+      padding: 26px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .cmp-card .co {
+      font-size: 0.72rem;
+      color: var(--sage);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 4px;
+    }
+
+    .cmp-card h3 {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 1.2rem;
+      color: var(--forest);
+      margin: 0 0 16px;
+    }
+
+    .cmp-spec-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 0.87rem;
+    }
+
+    .cmp-spec-row span:first-child { color: #8a9c95; font-weight: 500; }
+    .cmp-spec-row span:last-child  { font-weight: 600; color: var(--pine); }
+
+    .cmp-desc {
+      font-size: 0.84rem;
+      color: var(--ink-2);
+      line-height: 1.6;
+      margin-top: 14px;
+    }
+
+    /* ── Footer ── */
+    .db-footer {
+      max-width: 1280px;
+      margin: 48px auto 0;
+      padding: 20px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: #8a9c95;
+      border-top: 1px solid rgba(0,0,0,0.07);
+    }
+
+    .db-footer a { color: #8a9c95; text-decoration: none; }
+    .db-footer a:hover { color: var(--pine); }
+
+    /* ── Dark mode ── */
+    body.dark {
+      background: #111916;
+      background-image: radial-gradient(ellipse 80% 50% at 20% -10%, rgba(47,74,62,0.15) 0%, transparent 60%);
+    }
+
+    body.dark .type-panel,
+    body.dark .lens-panel,
+    body.dark .filter-bar,
+    body.dark .modal-box,
+    body.dark .cmp-card { background: #131e1a; border-color: rgba(255,255,255,0.07); }
+
+    body.dark .search-wrap input { background: #131e1a; border-color: rgba(255,255,255,0.08); color: #e8eeeb; }
+    body.dark .tbl-head          { background: #0f1712; }
+    body.dark .lens-item:hover   { background: #182119; }
+    body.dark .lens-item.selected { background: #182d22; }
+    body.dark .lens-name, body.dark .modal-title, body.dark .cmp-card h3 { color: #e8eeeb; }
+    body.dark .lens-item > div   { color: #9aaba5; }
+    body.dark .tag, body.dark .spec-tile, body.dark .index-badge { background: rgba(255,255,255,0.06); color: #b8ccc4; }
+    body.dark .chip              { border-color: rgba(255,255,255,0.12); color: #b8ccc4; }
+    body.dark .chip:hover        { background: rgba(255,255,255,0.08); }
+    body.dark .sort-select       { background: #0f1712; color: #e8eeeb; border-color: rgba(255,255,255,0.1); }
+    body.dark .modal-close       { background: rgba(255,255,255,0.08); color: #e8eeeb; }
+    body.dark .modal-desc, body.dark .cmp-desc { color: #8a9c95; }
+    body.dark .cmp-overlay       { background: #111916; }
+    body.dark .db-footer         { border-color: rgba(255,255,255,0.06); }
+    body.dark .db-title h1        { color: #c8ddd6; }
+    body.dark .db-title p         { color: #7a9488; }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .db-layout { grid-template-columns: 1fr; }
+      .type-panel { position: static; }
+      .type-list  { flex-direction: row; flex-wrap: wrap; padding: 10px; gap: 6px; }
+      .type-btn   { width: auto; padding: 8px 14px; }
+    }
+
+    @media (max-width: 680px) {
+      .db-page { padding: 20px 16px 60px; }
+      .tbl-head { display: none; }
+      .lens-item { grid-template-columns: 1fr; gap: 6px; }
+      .lens-item > div:not(.name-cell)::before {
+        content: attr(data-label) ": ";
+        font-weight: 600;
+        color: #8a9c95;
+        font-size: 0.72rem;
+      }
+      .cmp-cards { flex-direction: column; padding: 20px; }
+      .filter-bar { padding: 10px 14px; }
+      .db-title h1 { font-size: 1.7rem; }
+    }
+
+
+  </style>
+</head>
+<body>
+
+<div id="odb-header"></div>
+
+<!-- Page -->
+<div class="db-page">
+
+  <div class="db-title">
+    <h1>Lens Database</h1>
+    <p>Compare lens designs across NZ labs and manufacturers to support better dispensing decisions.</p>
+  </div>
+
+  <!-- Search -->
+  <div class="search-wrap">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="lens-search-input" placeholder="Search by lens name or company…" autocomplete="off" />
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-bar">
+    <div class="filter-section">
+      <span class="filter-label">Index</span>
+      <div class="chip-group" id="index-chips">
+        <button class="chip" data-value="1.50">1.50</button>
+        <button class="chip" data-value="1.56">1.56</button>
+        <button class="chip" data-value="1.60">1.60</button>
+        <button class="chip" data-value="1.67">1.67</button>
+        <button class="chip" data-value="1.74">1.74</button>
+      </div>
+    </div>
+    <div class="filter-section">
+      <span class="filter-label">Coating</span>
+      <div class="chip-group" id="coating-chips">
+        <button class="chip" data-value="anti-reflective">AR</button>
+        <button class="chip" data-value="blue">Blue Light</button>
+        <button class="chip" data-value="uv">UV</button>
+      </div>
+    </div>
+    <div class="filter-section">
+      <button class="clear-btn" id="clear-filters">✕ Clear</button>
+    </div>
+    <select class="sort-select" id="sort-select">
+      <option value="">Sort by…</option>
+      <option value="index-asc">Index (Low → High)</option>
+      <option value="index-desc" selected>Index (High → Low)</option>
+      <option value="name">Name (A–Z)</option>
+      <option value="company">Company (A–Z)</option>
+    </select>
+  </div>
+
+  <!-- Layout -->
+  <div class="db-layout">
+    <nav class="type-panel">
+      <div class="type-panel__head"><h3>Lens Type</h3></div>
+      <ul class="type-list">
+        <li><button class="type-btn" data-type="single">Single Vision</button></li>
+        <li><button class="type-btn" data-type="anti-fatigue">Anti Fatigue</button></li>
+        <li><button class="type-btn" data-type="myopia">Myopia Control</button></li>
+        <li><button class="type-btn" data-type="occupational">Occupational</button></li>
+        <li><button class="type-btn" data-type="bifocals">Bifocals</button></li>
+        <li><button class="type-btn" data-type="progressives">Progressives</button></li>
+      </ul>
+    </nav>
+
+    <div class="lens-panel">
+      <div class="tbl-head">
+        <div>Lens</div>
+        <div>Company</div>
+        <div>Index</div>
+        <div>Corridors</div>
+        <div>Coatings</div>
+      </div>
+      <div class="lens-list-inner" id="lens-table-body">
+        <div class="list-msg"><span class="icon">⟳</span>Loading lenses…</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Footer -->
+<div class="db-footer">
+  <span>© 2025 Optician's Desk — guidance only, confirm clinical measurements in practice.</span>
+  <div style="display:flex;gap:16px">
+    <a href="#">Privacy</a><a href="#">Terms</a><a href="#">Contact</a>
+  </div>
+</div>
+
+<!-- Lens modal -->
+<div id="lens-modal" class="modal-backdrop hidden">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-eyebrow" id="modal-company"></div>
+    <h2 class="modal-title" id="modal-name"></h2>
+    <div class="modal-specs">
+      <div class="spec-tile"><div class="lbl">Index</div><div class="val" id="modal-index"></div></div>
+      <div class="spec-tile"><div class="lbl">Corridors</div><div class="val" id="modal-corridors"></div></div>
+      <div class="spec-tile" style="grid-column:1/-1"><div class="lbl">Coatings</div><div class="val" id="modal-coatings"></div></div>
+    </div>
+    <p class="modal-desc" id="modal-description"></p>
+  </div>
+</div>
+
+<!-- Compare bar -->
+<div id="compare-bar" class="cmp-bar hidden">
+  <span class="cmp-bar__label">Comparing</span>
+  <div class="cmp-bar__items" id="compare-items"></div>
+  <button onclick="openCompare()">View comparison →</button>
+</div>
+
+<!-- Compare overlay -->
+<div id="compare-overlay" class="cmp-overlay hidden">
+  <div class="cmp-overlay__top">
+    <h2>Side-by-side comparison</h2>
+    <button onclick="closeCompare()">✕ Close</button>
+  </div>
+  <div class="cmp-cards" id="compare-carousel"></div>
+</div>
+
+<script>
+let allLenses      = [];
+let selectedLenses = [];
+let currentSearch  = "";
+let currentIndex   = "";
+let currentCoating = "";
+let currentSort    = "index-desc";
+let currentTags    = [];
+
+const table    = document.getElementById("lens-table-body");
+const typeBtns = document.querySelectorAll(".type-btn");
+
+fetch("/api/lenses")
+  .then(r => r.json())
+  .then(data => {
+    allLenses = data;
+    const first = document.querySelector('[data-type="single"]');
+    if (first) first.classList.add("is-active");
+
+    // Pre-populate search from URL param (?search=query)
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get('search');
+    if (q && q.trim().length >= 2) {
+      const input = document.getElementById('lens-search-input');
+      input.value = q.trim();
+      currentSearch = q.trim().toLowerCase();
+    }
+
+    render("single");
+  })
+
+typeBtns.forEach(btn => {
+  btn.addEventListener("click", () => {
+    typeBtns.forEach(b => b.classList.remove("is-active"));
+    btn.classList.add("is-active");
+    rerender();
+  });
+});
+
+let searchTimer;
+document.getElementById("lens-search-input").addEventListener("input", e => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    const v = e.target.value.trim().toLowerCase();
+    currentSearch = v.length >= 2 ? v : "";
+    rerender();
+  }, 250);
+});
+
+document.getElementById("sort-select").addEventListener("change", e => {
+  currentSort = e.target.value; rerender();
+});
+
+document.querySelectorAll("#index-chips .chip").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const was = btn.classList.contains("active");
+    document.querySelectorAll("#index-chips .chip").forEach(b => b.classList.remove("active"));
+    currentIndex = was ? "" : (btn.classList.add("active"), btn.dataset.value);
+    rerender();
+  });
+});
+
+document.querySelectorAll("#coating-chips .chip").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const was = btn.classList.contains("active");
+    document.querySelectorAll("#coating-chips .chip").forEach(b => b.classList.remove("active"));
+    currentCoating = was ? "" : (btn.classList.add("active"), btn.dataset.value);
+    rerender();
+  });
+});
+
+document.getElementById("clear-filters").addEventListener("click", () => {
+  currentIndex = currentCoating = "";
+  currentTags  = [];
+  document.querySelectorAll(".chip").forEach(b => b.classList.remove("active"));
+  rerender();
+});
+
+function getTags(lens) {
+  let tags = lens.tags ? lens.tags.split(",") : [];
+  if (lens.index >= 1.74)      tags.push("Ultra Thin");
+  else if (lens.index >= 1.67) tags.push("Thin");
+  if (lens.index <= 1.56)      tags.push("Budget");
+  if (lens.coatings?.toLowerCase().includes("blue")) tags.push("Digital");
+  if (lens.type === "single")  tags.push("Everyday");
+  if (lens.index >= 1.67 && lens.coatings?.includes("Anti-Reflective")) tags.push("Premium");
+  return [...new Set(tags.map(t => t.trim()).filter(Boolean))];
+}
+
+function rerender() {
+  const a = document.querySelector(".type-btn.is-active");
+  if (a) render(a.dataset.type);
+}
+
+function render(type) {
+  table.innerHTML = "";
+
+  const filtered = allLenses.filter(lens => {
+    const mType    = lens.type.toLowerCase().includes(type);
+    const mSearch  = !currentSearch || lens.name.toLowerCase().includes(currentSearch) || lens.company.toLowerCase().includes(currentSearch);
+   const mIndex = !currentIndex ||
+  (lens.index && lens.index.split(",").map(i => i.trim()).includes(currentIndex));
+    const mCoating = !currentCoating || lens.coatings?.toLowerCase().includes(currentCoating);
+    const mTag     = currentTags.length === 0 || currentTags.every(s => getTags(lens).some(t => t.toLowerCase().includes(s)));
+    return mType && mSearch && mIndex && mCoating && mTag;
+  });
+
+  if (currentSort === "index-asc")  filtered.sort((a,b) => (a.index||0)-(b.index||0));
+  if (currentSort === "index-desc") filtered.sort((a,b) => (b.index||0)-(a.index||0));
+  if (currentSort === "name")       filtered.sort((a,b) => (a.name||"").localeCompare(b.name||""));
+  if (currentSort === "company")    filtered.sort((a,b) => (a.company||"").localeCompare(b.company||""));
+
+  if (!filtered.length) {
+    table.innerHTML = `<div class="list-msg"><span class="icon">◎</span>No lenses match these filters.</div>`;
+    return;
+  }
+
+  filtered.forEach((lens, i) => {
+    const tags    = getTags(lens);
+    const isAdded = !!selectedLenses.find(l => l.name === lens.name);
+    const item    = document.createElement("div");
+    item.className = "lens-item" + (isAdded ? " selected" : "");
+    item.style.animationDelay = `${i * 25}ms`;
+
+    item.innerHTML = `
+      <div class="name-cell">
+        <div class="lens-name">${lens.name}</div>
+        <div class="tag-row">${tags.map(t => `<span class="tag ${currentTags.includes(t.toLowerCase())?'active':''}" data-tag="${t.toLowerCase()}">${t}</span>`).join("")}</div>
+        <button class="cmp-btn ${isAdded?'added':''}">${isAdded ? '✓ Added' : '+ Compare'}</button>
+      </div>
+      <div data-label="Company">${lens.company}</div>
+      <div data-label="Index">
+  ${lens.index
+    ? lens.index.split(",").map(i => `<span class="index-badge">${i.trim()}</span>`).join(" ")
+    : "—"}
+</div>
+      <div data-label="Corridors">${lens.corridors||"—"}</div>
+      <div data-label="Coatings">${lens.coatings||"—"}</div>
+    `;
+
+    item.querySelectorAll(".tag").forEach(el => {
+      el.addEventListener("click", e => {
+        e.stopPropagation();
+        const v = el.dataset.tag;
+        currentTags = currentTags.includes(v) ? currentTags.filter(t=>t!==v) : [...currentTags, v];
+        rerender();
+      });
+    });
+
+    item.addEventListener("click", () => openModal(lens));
+    item.querySelector(".cmp-btn").addEventListener("click", e => { e.stopPropagation(); toggleCompare(lens, item); });
+    table.appendChild(item);
+  });
+}
+
+function openModal(lens) {
+  document.getElementById("modal-company").innerText     = lens.company;
+  document.getElementById("modal-name").innerText        = lens.name;
+  document.getElementById("modal-index").innerText       = lens.index || "—";
+  document.getElementById("modal-corridors").innerText   = lens.corridors || "—";
+  document.getElementById("modal-coatings").innerText    = lens.coatings || "—";
+  document.getElementById("modal-description").innerText = lens.description || "No description available.";
+  document.getElementById("lens-modal").classList.remove("hidden");
+}
+
+function closeModal() { document.getElementById("lens-modal").classList.add("hidden"); }
+
+document.getElementById("lens-modal").addEventListener("click", function(e) { if (e.target===this) closeModal(); });
+
+function toggleCompare(lens, el) {
+  const exists = selectedLenses.find(l => l.name === lens.name);
+  const btn    = el.querySelector(".cmp-btn");
+  if (exists) {
+    selectedLenses = selectedLenses.filter(l => l.name !== lens.name);
+    el.classList.remove("selected");
+    btn.className = "cmp-btn"; btn.innerText = "+ Compare";
+  } else {
+    if (selectedLenses.length >= 3) { alert("You can compare up to 3 lenses."); return; }
+    selectedLenses.push(lens);
+    el.classList.add("selected");
+    btn.className = "cmp-btn added"; btn.innerText = "✓ Added";
+  }
+  updateCompareBar();
+}
+
+function updateCompareBar() {
+  const bar = document.getElementById("compare-bar");
+  document.getElementById("compare-items").innerHTML = selectedLenses.map(l=>`<span class="cmp-bar__item">${l.name}</span>`).join("");
+  bar.classList.toggle("hidden", selectedLenses.length === 0);
+}
+
+function openCompare() {
+  document.getElementById("compare-carousel").innerHTML = selectedLenses.map(lens => `
+    <div class="cmp-card">
+      <div class="co">${lens.company}</div>
+      <h3>${lens.name}</h3>
+      <div class="cmp-spec-row"><span>Index</span><span>${lens.index||"—"}</span></div>
+      <div class="cmp-spec-row"><span>Corridors</span><span>${lens.corridors||"—"}</span></div>
+      <div class="cmp-spec-row"><span>Coatings</span><span>${lens.coatings||"—"}</span></div>
+      <p class="cmp-desc">${lens.description||""}</p>
+    </div>
+  `).join("");
+  document.getElementById("compare-overlay").classList.remove("hidden");
+}
+
+function closeCompare() {
+  document.getElementById("compare-overlay").classList.add("hidden");
+  document.getElementById("compare-carousel").innerHTML = "";
+}
+
+document.getElementById("compare-overlay").addEventListener("click", function(e) { if (e.target===this) closeCompare(); });
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") { closeModal(); closeCompare(); }
+});
+</script>
+<script src="js/components.js"></script>
+<div id="odb-footer"></div>
+</body>
+</html>

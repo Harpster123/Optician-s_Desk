@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Calculators • Optician's Desk</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/styles.css" />
+
+  <style>
+    :root {
+      --forest: #1a2e26;
+      --pine:   #2f4a3e;
+      --sage:   #5f776c;
+      --mist:   #e8eeeb;
+      --ink:    #1a1f1c;
+      --ink-2:  #4a5450;
+      --line:   rgba(0,0,0,0.07);
+      --bg:     #f0f3f1;
+      --card:   #ffffff;
+      --radius: 14px;
+    }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(47,74,62,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 110%, rgba(95,119,108,0.06) 0%, transparent 60%);
+      color: var(--ink);
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    /* ── Page layout ── */
+    .calc-index-page {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 40px 32px 80px;
+    }
+
+    .breadcrumb {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.8rem; color: var(--sage); margin-bottom: 28px;
+    }
+    .breadcrumb a { color: var(--sage); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--pine); }
+    .breadcrumb__sep { opacity: 0.4; }
+
+    /* ── Page title ── */
+    .page-title { margin-bottom: 40px; }
+
+    .page-title__eyebrow {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--sage); margin-bottom: 8px;
+    }
+
+    .page-title h1 {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 2.2rem; color: var(--forest);
+      margin: 0 0 10px; line-height: 1.15;
+    }
+
+    .page-title p {
+      color: var(--ink-2); font-size: 0.95rem;
+      margin: 0; line-height: 1.6; max-width: 520px;
+    }
+
+    /* ── Calculator grid ── */
+    .calc-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    /* ── Calculator card ── */
+    .calc-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid rgba(0,0,0,0.06);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .calc-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 14px 36px rgba(0,0,0,0.11);
+    }
+
+    .calc-card__illus {
+      background: #f4f7f5;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 140px;
+      padding: 16px;
+    }
+
+    .calc-card__illus svg {
+      width: 100%; height: 100%;
+      max-width: 140px; max-height: 110px;
+    }
+
+    .calc-card__body {
+      padding: 18px 20px 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .calc-card__body h3 {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 1rem; font-weight: 400;
+      color: var(--forest); margin: 0 0 6px;
+    }
+
+    .calc-card__body p {
+      font-size: 0.82rem; color: var(--ink-2);
+      margin: 0 0 14px; line-height: 1.5; flex: 1;
+    }
+
+    .calc-card__cta {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 0.8rem; font-weight: 600;
+      color: var(--pine); letter-spacing: 0.02em;
+      margin-top: auto;
+    }
+
+    .calc-card__cta svg {
+      width: 11px; height: 11px;
+      stroke: var(--pine); fill: none;
+      stroke-width: 2.2; stroke-linecap: round;
+      transition: transform 0.15s;
+    }
+
+    .calc-card:hover .calc-card__cta svg { transform: translateX(3px); }
+
+    /* ── Dark mode ── */
+    body.dark { background: #111916; color: #d8e4df; }
+    body.dark .page-title h1       { color: #c8ddd6; }
+    body.dark .page-title p        { color: #7a9488; }
+    body.dark .page-title__eyebrow { color: #5f776c; }
+    body.dark .breadcrumb          { color: #5f776c; }
+    body.dark .breadcrumb a        { color: #5f776c; }
+
+    body.dark .calc-card {
+      background: #1c2620;
+      border-color: #263028;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+    }
+
+    body.dark .calc-card__illus {
+      background: #222e28;
+      border-color: #263028;
+    }
+
+    body.dark .calc-card__illus svg line,
+    body.dark .calc-card__illus svg path,
+    body.dark .calc-card__illus svg circle,
+    body.dark .calc-card__illus svg polygon,
+    body.dark .calc-card__illus svg polyline { stroke: #8aada0; }
+
+    body.dark .calc-card__illus svg text { fill: #7fa898; }
+    body.dark .calc-card__body h3 { color: #c0d8d0; }
+    body.dark .calc-card__body p  { color: #6a8878; }
+    body.dark .calc-card__cta     { color: #7fa898; }
+    body.dark .calc-card__cta svg { stroke: #7fa898; }
+
+    /* ── Responsive ── */
+    @media (max-width: 760px) {
+      .calc-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 480px) {
+      .calc-index-page { padding: 24px 18px 60px; }
+      .calc-grid { grid-template-columns: 1fr; }
+      .page-title h1 { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="odb-header"></div>
+
+<main class="calc-index-page">
+
+  <div class="breadcrumb">
+    <a href="../index.html">Home</a>
+    <span class="breadcrumb__sep">›</span>
+    <span>Calculators</span>
+  </div>
+
+  <div class="page-title">
+    <div class="page-title__eyebrow">Clinical Tools</div>
+    <h1>Calculators</h1>
+    <p>Seven dispensing calculators for everyday optical work. All run locally in your browser — no data is sent anywhere.</p>
+  </div>
+
+  <div class="calc-grid">
+
+    <!-- Optical Cross -->
+    <a class="calc-card" href="optical-cross.html">
+      <div class="calc-card__illus">
+        <svg viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="80" cy="60" r="36" stroke="#3a3a3a" stroke-width="1.2"/>
+          <line x1="20" y1="60" x2="140" y2="60" stroke="#3a3a3a" stroke-width="1.2"/>
+          <line x1="80" y1="8" x2="80" y2="112" stroke="#3a3a3a" stroke-width="1.2"/>
+          <line x1="55" y1="33" x2="105" y2="87" stroke="#5f776c" stroke-width="1" stroke-dasharray="3 2"/>
+          <line x1="50" y1="82" x2="110" y2="38" stroke="#5f776c" stroke-width="1" stroke-dasharray="3 2"/>
+          <circle cx="80" cy="60" r="2.5" fill="#3a3a3a"/>
+          <text x="18" y="55" font-size="7" fill="#5f776c" font-family="DM Sans,sans-serif" font-weight="600">−2.00</text>
+          <text x="80" y="6" font-size="7" fill="#5f776c" font-family="DM Sans,sans-serif" font-weight="600" text-anchor="middle">−3.50</text>
+          <text x="26" y="112" font-size="7" fill="#3a3a3a" font-family="DM Sans,sans-serif">R</text>
+          <text x="126" y="112" font-size="7" fill="#3a3a3a" font-family="DM Sans,sans-serif">L</text>
+        </svg>
+      </div>
+      <div class="calc-card__body">
+        <h3>Optical Cross</h3>
+        <p>Visualise lens power at all principal meridians for both eyes. Compare 90°, 180°, and cylinder axis powers side by side.</p>
+        <span class="calc-card__cta">Open <svg viewBox="0 0 12 12"><polyline points="4,2 8,6 4,10"/></svg></span>
+      </div>
+    </a>
+
+    <!-- Lens Size -->
+    <a class="calc-card" href="lens-size.html">
+      <div class="calc-card__illus">
+        <svg viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="80" cy="60" r="46" stroke="#3a3a3a" stroke-width="1.2"/>
+          <circle cx="80" cy="60" r="38" stroke="#3a3a3a" stroke-width="0.8" stroke-dasharray="3 3"/>
+          <line x1="34" y1="60" x2="126" y2="60" stroke="#3a3a3a" stroke-width="1"/>
+          <line x1="34" y1="56" x2="34" y2="64" stroke="#3a3a3a" stroke-width="1"/>
+          <line x1="126" y1="56" x2="126" y2="64" stroke="#3a3a3a" stroke-width="1"/>
+          <circle cx="80" cy="60" r="2.5" stroke="#3a3a3a" stroke-width="1" fill="white"/>
+          <text x="75" y="47" font-size="9" fill="#5f776c" font-family="DM Sans, sans-serif" font-weight="600">MBS</text>
+        </svg>
+      </div>
+      <div class="calc-card__body">
+        <h3>Lens Size (Uncut / MBS)</h3>
+        <p>Calculate minimum blank size required for a given frame and prescription.</p>
+        <span class="calc-card__cta">Open <svg viewBox="0 0 12 12"><polyline points="4,2 8,6 4,10"/></svg></span>
+      </div>
+    </a>
+
+    <!-- Prism & Decentration -->
+    <a class="calc-card" href="prism-decentration.html">
+      <div class="calc-card__illus">
+        <svg viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="80,18 128,98 32,98" stroke="#3a3a3a" stroke-width="1.2" fill="none"/>
+          <polygon points="80,88 92,108 68,108" stroke="#3a3a3a" stroke-width="0.9" fill="none"/>
+          <line x1="55" y1="42" x2="108" y2="75" stroke="#3a3a3a" stroke-width="1"/>
+          <line x1="104" y1="68" x2="108" y2="75" stroke="#3a3a3a" stroke-width="1"/>
+          <line x1="100" y1="77" x2="108" y2="75" stroke="#3a3a3a" stroke-width="1"/>
+          <text x="110" y="66" font-size="10" fill="#5f776c" font-family="DM Sans, sans-serif">Δ</text>
+        </svg>
+      </div>
+      <div class="calc-card__body">
+        <h3>Prism &amp; Decentration</h3>
+        <p>Calculate induced prism from decentration using Prentice's rule.</p>
+        <span class="calc-card__cta">Open <svg viewBox="0 0 12 12"><polyline points="4,2 8,6 4,10"/></svg></span>
+      </div>
+    </a>
+
+    <!-- Lens Thickness -->
+    <a class="calc-card" href="lens-thickness.html">
+      <div class="calc-card__illus">
+        <svg viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M76,14 Q56,60 76,106" stroke="#3a3a3a" stroke-width="1.2" fill="none"/>
+          <path d="M84,14 Q104,60 84,106" stroke="#3a3a3a" stroke-width="1.2" fill="none"/>
+          <line x1="76" y1="14" x2="84" y2="14" stroke="#3a3a3a" stroke-width="1"/>
+          <line x1="76" y1="106" x2="84" y2="106" stroke="#3a3a3a" stroke-width="1"/>
+          <line x1="80" y1="8" x2="80" y2="112" stroke="#3a3a3a" stroke-width="0.8" stroke-dasharray="3 3"/>
+          <line x1="26" y1="60" x2="72" y2="60" stroke="#3a3a3a" stroke-width="1"/>
+          <polyline points="30,57 26,60 30,63" stroke="#3a3a3a" stroke-width="1" fill="none"/>
+          <line x1="88" y1="60" x2="134" y2="60" stroke="#3a3a3a" stroke-width="1"/>
+          <polyline points="130,57 134,60 130,63" stroke="#3a3a3a" stroke-width="1" fill="none"/>
+          <text x="73" y="56" font-size="8" fill="#5f776c" font-family="DM Sans, sans-serif" font-weight="500">ct</text>
+        </svg>
+      </div>
+      <div class="calc-card__body">
+        <h3>Lens Thickness (± power)</h3>
+        <p>Estimate edge and centre thickness for plus and minus powered lenses.</p>
+        <span class="calc-card__cta">Open <svg viewBox="0 0 12 12"><polyline points="4,2 8,6 4,10"/></svg></span>
+      </div>
+    </a>
+
+    <!-- Cylinder Conversion -->
+    <a class="calc-card" href="cylinder-conversion.html">
+      <div class="calc-card__illus">
+        <svg viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="80" cy="60" r="44" stroke="#3a3a3a" stroke-width="1.2"/>
+          <line x1="38" y1="60" x2="122" y2="60" stroke="#3a3a3a" stroke-width="0.9"/>
+          <line x1="80" y1="18" x2="80" y2="102" stroke="#3a3a3a" stroke-width="0.9"/>
+          <line x1="48" y1="26" x2="112" y2="94" stroke="#3a3a3a" stroke-width="1"/>
+          <text x="50" y="52" font-size="15" fill="#3a3a3a" font-family="DM Sans, sans-serif" font-weight="300">+</text>
+          <text x="95" y="83" font-size="15" fill="#3a3a3a" font-family="DM Sans, sans-serif" font-weight="300">−</text>
+          <path d="M 112,36 A 40,40 0 0,1 124,60" stroke="#3a3a3a" stroke-width="1" fill="none"/>
+          <polyline points="110,44 112,36 119,40" stroke="#3a3a3a" stroke-width="1" fill="none"/>
+        </svg>
+      </div>
+      <div class="calc-card__body">
+        <h3>+ / − Cylinder Conversion</h3>
+        <p>Transpose prescriptions between positive and negative cylinder form.</p>
+        <span class="calc-card__cta">Open <svg viewBox="0 0 12 12"><polyline points="4,2 8,6 4,10"/></svg></span>
+      </div>
+    </a>
+
+    <!-- Vertex Distance -->
+    <a class="calc-card" href="vertex-distance.html">
+      <div class="calc-card__illus">
+        <svg viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="54" cy="62" r="28" stroke="#3a3a3a" stroke-width="1.2"/>
+          <line x1="92" y1="22" x2="92" y2="102" stroke="#3a3a3a" stroke-width="1.2" stroke-dasharray="3 3"/>
+          <line x1="54" y1="62" x2="130" y2="62" stroke="#3a3a3a" stroke-width="1"/>
+          <polyline points="126,58 130,62 126,66" stroke="#3a3a3a" stroke-width="1" fill="none"/>
+          <text x="97" y="57" font-size="10" fill="#5f776c" font-family="DM Sans, sans-serif" font-weight="600">VD</text>
+          <text x="48" y="67" font-size="11" fill="#3a3a3a" font-family="DM Sans, sans-serif">+</text>
+        </svg>
+      </div>
+      <div class="calc-card__body">
+        <h3>Vertex Distance Compensation</h3>
+        <p>Adjust lens power for changes in vertex distance from trial frame to spectacle.</p>
+        <span class="calc-card__cta">Open <svg viewBox="0 0 12 12"><polyline points="4,2 8,6 4,10"/></svg></span>
+      </div>
+    </a>
+
+    <!-- Oblique Cylinder -->
+    <a class="calc-card" href="oblique-cylinder.html">
+      <div class="calc-card__illus">
+        <svg viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="80" cy="62" r="44" stroke="#3a3a3a" stroke-width="1.2"/>
+          <line x1="44" y1="96" x2="116" y2="28" stroke="#3a3a3a" stroke-width="1" stroke-dasharray="4 3"/>
+          <line x1="42" y1="40" x2="118" y2="84" stroke="#3a3a3a" stroke-width="1"/>
+          <path d="M 80,20 A 42,42 0 0,1 118,55" stroke="#3a3a3a" stroke-width="1" fill="none"/>
+          <polyline points="113,48 118,55 110,56" stroke="#3a3a3a" stroke-width="1" fill="none"/>
+          <text x="86" y="36" font-size="9" fill="#5f776c" font-family="DM Sans, sans-serif">θ</text>
+        </svg>
+      </div>
+      <div class="calc-card__body">
+        <h3>Oblique Cylinder Effect</h3>
+        <p>Calculate the resultant power when two cylinders are combined at oblique axes.</p>
+        <span class="calc-card__cta">Open <svg viewBox="0 0 12 12"><polyline points="4,2 8,6 4,10"/></svg></span>
+      </div>
+    </a>
+
+  </div><!-- /calc-grid -->
+
+</main>
+
+<div id="odb-footer"></div>
+<script src="../js/components.js"></script>
+
+</body>
+</html>

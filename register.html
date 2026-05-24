@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Create account • Optician's Desk</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --forest: #1a2e26;
+      --pine:   #2f4a3e;
+      --sage:   #5f776c;
+      --mist:   #e8eeeb;
+      --ink:    #1a1f1c;
+      --ink-2:  #4a5450;
+      --bg:     #f0f3f1;
+      --card:   #ffffff;
+      --radius: 14px;
+      --error:  #c0392b;
+      --success: #2e7d52;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse 70% 60% at 15% 0%, rgba(47,74,62,0.10) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 50% at 85% 100%, rgba(95,119,108,0.07) 0%, transparent 55%);
+      color: var(--ink);
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    .auth-header {
+      background: var(--forest);
+      padding: 0 32px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.18);
+    }
+
+    .auth-brand {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 1.15rem;
+      color: #fff;
+      text-decoration: none;
+      letter-spacing: 0.01em;
+    }
+
+    .auth-brand span {
+      color: rgba(255,255,255,0.4);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 400;
+      margin-left: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* ── Main layout ── */
+    .auth-main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+    }
+
+    .auth-wrap {
+      width: 100%;
+      max-width: 440px;
+    }
+
+    /* ── Card ── */
+    .auth-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid rgba(0,0,0,0.06);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+      padding: 40px;
+      animation: fadeUp 0.3s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .auth-card__eyebrow {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--sage);
+      margin-bottom: 6px;
+    }
+
+    .auth-card h1 {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 1.75rem;
+      color: var(--forest);
+      margin: 0 0 6px;
+      line-height: 1.2;
+    }
+
+    .auth-card__sub {
+      font-size: 0.88rem;
+      color: var(--ink-2);
+      margin: 0 0 28px;
+      line-height: 1.5;
+    }
+
+    /* ── Fields ── */
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--ink-2);
+    }
+
+    .field input,
+    .field select {
+      padding: 11px 14px;
+      border-radius: 10px;
+      border: 1.5px solid rgba(0,0,0,0.10);
+      background: #f8faf9;
+      font-size: 0.97rem;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: var(--sage);
+      box-shadow: 0 0 0 3px rgba(95,119,108,0.12);
+      background: #fff;
+    }
+
+    .field input.error,
+    .field select.error {
+      border-color: var(--error);
+    }
+
+    /* ── Password strength ── */
+    .pw-strength {
+      display: flex;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .pw-strength__bar {
+      height: 3px;
+      flex: 1;
+      border-radius: 2px;
+      background: rgba(0,0,0,0.08);
+      transition: background 0.3s;
+    }
+
+    .pw-strength__bar.weak   { background: #e74c3c; }
+    .pw-strength__bar.medium { background: #f39c12; }
+    .pw-strength__bar.strong { background: #2e7d52; }
+
+    .pw-strength__label {
+      font-size: 0.74rem;
+      color: var(--sage);
+      margin-top: 4px;
+    }
+
+    /* ── Error / success messages ── */
+    .auth-error {
+      background: #fdf2f2;
+      border: 1px solid rgba(192,57,43,0.2);
+      border-radius: 10px;
+      padding: 11px 14px;
+      font-size: 0.85rem;
+      color: var(--error);
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .auth-error.visible { display: block; }
+
+    /* ── Submit button ── */
+    .auth-btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      background: var(--forest);
+      color: #fff;
+      font-size: 0.95rem;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      margin-top: 4px;
+    }
+
+    .auth-btn:hover:not(:disabled) { background: var(--pine); }
+    .auth-btn:active:not(:disabled) { transform: scale(0.99); }
+    .auth-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .auth-btn__spinner {
+      display: none;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto;
+    }
+
+    .auth-btn.loading .auth-btn__text { display: none; }
+    .auth-btn.loading .auth-btn__spinner { display: block; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Terms note ── */
+    .terms-note {
+      font-size: 0.76rem;
+      color: var(--sage);
+      text-align: center;
+      margin-top: 14px;
+      line-height: 1.5;
+    }
+
+    /* ── Footer link ── */
+    .auth-footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 0.85rem;
+      color: var(--ink-2);
+    }
+
+    .auth-footer a {
+      color: var(--pine);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .auth-footer a:hover { text-decoration: underline; }
+
+    /* ── Page footer ── */
+    .page-footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 0.78rem;
+      color: #9aaba5;
+    }
+
+    /* ── Dark mode ── */
+    body.dark {
+      background: #111916;
+      color: #d8e4df;
+    }
+
+    body.dark .auth-card {
+      background: #1c2620;
+      border-color: #263028;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+
+    body.dark .auth-card h1        { color: #c8ddd6; }
+    body.dark .auth-card__eyebrow  { color: #5f776c; }
+    body.dark .auth-card__sub      { color: #7a9488; }
+    body.dark .field label         { color: #7a9488; }
+    body.dark .terms-note          { color: #4d6860; }
+
+    body.dark .field input,
+    body.dark .field select {
+      background: #222e28;
+      border-color: #2e3c36;
+      color: #d8e4df;
+    }
+
+    body.dark .field input:focus,
+    body.dark .field select:focus {
+      border-color: var(--sage);
+      background: #263028;
+    }
+
+    body.dark .auth-footer { color: #7a9488; }
+    body.dark .page-footer  { color: #3d5248; }
+    body.dark .pw-strength__bar { background: rgba(255,255,255,0.08); }
+    body.dark .pw-strength__label { color: #4d6860; }
+
+    @media (max-width: 480px) {
+      .auth-card { padding: 28px 24px; }
+      .auth-header { padding: 0 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="auth-header">
+    <a class="auth-brand" href="/">Optician's Desk <span>NZ</span></a>
+  </header>
+
+  <main class="auth-main">
+    <div class="auth-wrap">
+
+      <div class="auth-card">
+        <div class="auth-card__eyebrow">Free account</div>
+        <h1>Create account</h1>
+        <p class="auth-card__sub">Access the NZ lens database and clinical calculators.</p>
+
+        <div class="auth-error" id="authError"></div>
+
+        <div class="field">
+          <label for="name">Full name</label>
+          <input type="text" id="name" name="name" autocomplete="name" placeholder="Jane Smith" required />
+        </div>
+
+        <div class="field">
+          <label for="role">Role</label>
+          <select id="role" name="role">
+            <option value="" disabled selected>Select your role…</option>
+            <option value="Dispensing Optician">Dispensing Optician</option>
+            <option value="Optometrist">Optometrist</option>
+            <option value="Optical Assistant">Optical Assistant</option>
+            <option value="Student">Student</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="email">Email address</label>
+          <input type="email" id="email" name="email" autocomplete="email" placeholder="you@example.com" required />
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" autocomplete="new-password" placeholder="At least 8 characters" required />
+          <div class="pw-strength" id="pwStrength" aria-hidden="true">
+            <div class="pw-strength__bar" id="bar1"></div>
+            <div class="pw-strength__bar" id="bar2"></div>
+            <div class="pw-strength__bar" id="bar3"></div>
+          </div>
+          <div class="pw-strength__label" id="pwLabel"></div>
+        </div>
+
+        <div class="field">
+          <label for="confirmPassword">Confirm password</label>
+          <input type="password" id="confirmPassword" name="confirmPassword" autocomplete="new-password" placeholder="••••••••" required />
+        </div>
+
+        <button class="auth-btn" id="submitBtn" type="button">
+          <span class="auth-btn__text">Create account</span>
+          <span class="auth-btn__spinner"></span>
+        </button>
+
+        <p class="terms-note">By creating an account you agree to our terms of service.</p>
+      </div>
+
+      <div class="auth-footer">
+        Already have an account? <a href="/login">Log in</a>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="page-footer">
+    Optician's Desk — built for NZ optical dispensing
+  </footer>
+
+  <script>
+    // Apply saved dark mode
+    if (localStorage.getItem('theme') === 'dark') {
+      document.body.classList.add('dark');
+    }
+
+    const nameEl    = document.getElementById('name');
+    const roleEl    = document.getElementById('role');
+    const emailEl   = document.getElementById('email');
+    const passEl    = document.getElementById('password');
+    const confEl    = document.getElementById('confirmPassword');
+    const errorEl   = document.getElementById('authError');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // ── Password strength ──
+    const bars  = [document.getElementById('bar1'), document.getElementById('bar2'), document.getElementById('bar3')];
+    const label = document.getElementById('pwLabel');
+
+    function scorePassword(pw) {
+      let score = 0;
+      if (pw.length >= 8)  score++;
+      if (pw.length >= 12) score++;
+      if (/[A-Z]/.test(pw) && /[0-9!@#$%^&*]/.test(pw)) score++;
+      return score; // 0–3
+    }
+
+    passEl.addEventListener('input', () => {
+      const pw    = passEl.value;
+      const score = scorePassword(pw);
+      const levels = ['weak', 'medium', 'strong'];
+      const labels = ['Weak', 'Could be stronger', 'Strong'];
+
+      bars.forEach((b, i) => {
+        b.className = 'pw-strength__bar';
+        if (pw.length > 0 && i < score) b.classList.add(levels[Math.min(score - 1, 2)]);
+      });
+
+      label.textContent = pw.length > 0 ? labels[Math.min(score - 1, 2)] || 'Weak' : '';
+    });
+
+    function showError(msg) {
+      errorEl.textContent = msg;
+      errorEl.classList.add('visible');
+    }
+
+    function clearError() {
+      errorEl.classList.remove('visible');
+    }
+
+    function setLoading(on) {
+      submitBtn.disabled = on;
+      submitBtn.classList.toggle('loading', on);
+    }
+
+    async function doRegister() {
+      clearError();
+
+      const name     = nameEl.value.trim();
+      const role     = roleEl.value;
+      const email    = emailEl.value.trim();
+      const password = passEl.value;
+      const confirm  = confEl.value;
+
+      if (!name)     { showError('Please enter your name.'); nameEl.focus(); return; }
+      if (!role)     { showError('Please select your role.'); roleEl.focus(); return; }
+      if (!email)    { showError('Please enter your email address.'); emailEl.focus(); return; }
+      if (!password) { showError('Please choose a password.'); passEl.focus(); return; }
+      if (password.length < 8) { showError('Password must be at least 8 characters.'); passEl.focus(); return; }
+      if (password !== confirm) { showError('Passwords do not match.'); confEl.focus(); return; }
+
+      setLoading(true);
+
+      try {
+        const res = await fetch('/auth/register', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ name, role, email, password })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          showError(data.error || 'Registration failed. Please try again.');
+          setLoading(false);
+          return;
+        }
+
+        // Success — go to lens database
+        window.location.href = '/lenses';
+
+      } catch {
+        showError('Network error. Please check your connection and try again.');
+        setLoading(false);
+      }
+    }
+
+    submitBtn.addEventListener('click', doRegister);
+
+    // Allow Enter on last field
+    confEl.addEventListener('keydown', e => { if (e.key === 'Enter') doRegister(); });
+  </script>
+
+</body>
+</html>

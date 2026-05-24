@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>My Account • Optician's Desk</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --forest: #1a2e26;
+      --pine:   #2f4a3e;
+      --sage:   #5f776c;
+      --mist:   #e8eeeb;
+      --ink:    #1a1f1c;
+      --ink-2:  #4a5450;
+      --bg:     #f0f3f1;
+      --card:   #ffffff;
+      --radius: 14px;
+      --error:  #c0392b;
+      --success:#2e7d52;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse 70% 60% at 15% 0%, rgba(47,74,62,0.08) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 50% at 85% 100%, rgba(95,119,108,0.06) 0%, transparent 55%);
+      color: var(--ink);
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    /* ── Page layout ── */
+    .account-page {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    .breadcrumb {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.8rem; color: var(--sage); margin-bottom: 28px;
+    }
+    .breadcrumb a { color: var(--sage); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--pine); }
+    .breadcrumb__sep { opacity: 0.4; }
+
+    .page-title { margin-bottom: 32px; }
+    .page-title__eyebrow {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--sage); margin-bottom: 6px;
+    }
+    .page-title h1 {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 2rem; color: var(--forest); margin: 0; line-height: 1.15;
+    }
+
+    /* ── Cards ── */
+    .account-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid rgba(0,0,0,0.06);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+      padding: 28px 32px;
+      margin-bottom: 20px;
+    }
+
+    .account-card__title {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--sage);
+      margin: 0 0 20px; padding-bottom: 12px;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+
+    /* ── Fields ── */
+    .field {
+      display: flex; flex-direction: column;
+      gap: 6px; margin-bottom: 16px;
+    }
+
+    .field:last-of-type { margin-bottom: 0; }
+
+    .field label {
+      font-size: 0.82rem; font-weight: 600; color: var(--ink-2);
+    }
+
+    .field input,
+    .field select {
+      padding: 11px 14px; border-radius: 10px;
+      border: 1.5px solid rgba(0,0,0,0.10); background: #f8faf9;
+      font-size: 0.97rem; font-family: 'DM Sans', sans-serif; color: var(--ink);
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s; width: 100%;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: var(--sage);
+      box-shadow: 0 0 0 3px rgba(95,119,108,0.12);
+      background: #fff;
+    }
+
+    .field input:disabled {
+      background: #f0f3f1; color: var(--sage); cursor: not-allowed;
+    }
+
+    /* ── Messages ── */
+    .msg {
+      border-radius: 10px; padding: 11px 14px;
+      font-size: 0.85rem; margin-bottom: 16px; display: none;
+    }
+    .msg.error   { background: #fdf2f2; border: 1px solid rgba(192,57,43,0.2); color: var(--error); }
+    .msg.success { background: #f0faf5; border: 1px solid rgba(46,125,82,0.2); color: var(--success); }
+    .msg.visible { display: block; }
+
+    /* ── Buttons ── */
+    .btn-row {
+      display: flex; justify-content: flex-end;
+      margin-top: 20px; padding-top: 16px;
+      border-top: 1px solid rgba(0,0,0,0.06);
+    }
+
+    .btn {
+      padding: 10px 22px; border-radius: 10px; border: none;
+      font-size: 0.9rem; font-family: 'DM Sans', sans-serif;
+      font-weight: 600; cursor: pointer; transition: background 0.15s, transform 0.1s;
+    }
+
+    .btn:active { transform: scale(0.99); }
+
+    .btn--primary { background: var(--forest); color: #fff; }
+    .btn--primary:hover:not(:disabled) { background: var(--pine); }
+    .btn--primary:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .btn--danger {
+      background: transparent; color: var(--error);
+      border: 1.5px solid rgba(192,57,43,0.25);
+    }
+    .btn--danger:hover { background: #fdf2f2; }
+
+    .btn__spinner {
+      display: none; width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+      border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto;
+    }
+    .btn.loading .btn__text   { display: none; }
+    .btn.loading .btn__spinner { display: block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Member since ── */
+    .meta-row {
+      display: flex; gap: 24px; flex-wrap: wrap;
+      font-size: 0.82rem; color: var(--sage); margin-top: 4px;
+    }
+
+    /* ── Danger zone ── */
+    .danger-zone {
+      border-color: rgba(192,57,43,0.15);
+    }
+    .danger-zone .account-card__title { color: #c0392b; border-color: rgba(192,57,43,0.1); }
+    .danger-zone p { font-size: 0.875rem; color: var(--ink-2); margin: 0 0 16px; line-height: 1.55; }
+
+    /* ── Loading skeleton ── */
+    .skeleton {
+      background: linear-gradient(90deg, #e8eeeb 25%, #f0f3f1 50%, #e8eeeb 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 8px; height: 44px; width: 100%;
+    }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+
+    /* ── Dark mode ── */
+    body.dark { background: #111916; color: #d8e4df; }
+    body.dark .page-title h1        { color: #c8ddd6; }
+    body.dark .page-title__eyebrow  { color: #5f776c; }
+    body.dark .breadcrumb           { color: #5f776c; }
+    body.dark .breadcrumb a         { color: #5f776c; }
+    body.dark .account-card         { background: #1c2620; border-color: #263028; box-shadow: 0 4px 16px rgba(0,0,0,0.25); }
+    body.dark .account-card__title  { color: #5f776c; border-color: #263028; }
+    body.dark .field label          { color: #7a9488; }
+    body.dark .field input,
+    body.dark .field select         { background: #222e28; border-color: #2e3c36; color: #d8e4df; }
+    body.dark .field input:focus,
+    body.dark .field select:focus   { border-color: var(--sage); background: #263028; }
+    body.dark .field input:disabled { background: #1a2420; color: #4d6860; }
+    body.dark .btn-row              { border-color: #263028; }
+    body.dark .meta-row             { color: #4d6860; }
+    body.dark .skeleton             { background: linear-gradient(90deg, #1c2620 25%, #222e28 50%, #1c2620 75%); background-size: 200% 100%; }
+    body.dark .danger-zone          { border-color: rgba(192,57,43,0.2); }
+
+    @media (max-width: 600px) {
+      .account-card { padding: 22px 20px; }
+      .account-page { padding: 24px 16px 60px; }
+      .btn-row { justify-content: stretch; }
+      .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="odb-header"></div>
+
+<main class="account-page">
+
+  <div class="breadcrumb">
+    <a href="/">Home</a>
+    <span class="breadcrumb__sep">›</span>
+    <span>My Account</span>
+  </div>
+
+  <div class="page-title">
+    <div class="page-title__eyebrow">Account</div>
+    <h1 id="pageHeading">My Account</h1>
+  </div>
+
+  <!-- ── Profile details ── -->
+  <div class="account-card" id="profileCard">
+    <div class="account-card__title">Profile</div>
+    <div class="skeleton" style="margin-bottom:12px"></div>
+    <div class="skeleton" style="margin-bottom:12px"></div>
+    <div class="skeleton"></div>
+  </div>
+
+  <!-- ── Change email ── -->
+  <div class="account-card" id="emailCard">
+    <div class="account-card__title">Email address</div>
+    <div class="skeleton"></div>
+  </div>
+
+  <!-- ── Change password ── -->
+  <div class="account-card" id="passwordCard">
+    <div class="account-card__title">Change password</div>
+    <div class="field">
+      <label for="currentPw">Current password</label>
+      <input type="password" id="currentPw" placeholder="••••••••" />
+    </div>
+    <div class="field">
+      <label for="newPw">New password</label>
+      <input type="password" id="newPw" placeholder="At least 8 characters" />
+    </div>
+    <div class="field">
+      <label for="confirmPw">Confirm new password</label>
+      <input type="password" id="confirmPw" placeholder="••••••••" />
+    </div>
+    <div class="msg error" id="pwError"></div>
+    <div class="msg success" id="pwSuccess"></div>
+    <div class="btn-row">
+      <button class="btn btn--primary" id="pwBtn" onclick="updatePassword()">
+        <span class="btn__text">Update password</span>
+        <span class="btn__spinner"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Admin console ── -->
+  <div class="account-card" id="admin-console-link" style="display:none; border-color: rgba(31,61,51,0.2);">
+    <div class="account-card__title" style="color: #1f3d33;">Admin Access</div>
+    <p style="font-size:0.875rem; color: var(--ink-2); margin: 0 0 16px; line-height:1.55;">You have admin privileges. Access the admin console to manage lenses and users.</p>
+    <a href="/admin" class="btn btn--primary" style="display:inline-block; text-decoration:none; padding: 10px 22px; border-radius:10px; background: var(--forest); color:#fff; font-size:0.9rem; font-weight:600;">Open Admin Console →</a>
+  </div>
+
+  <!-- ── Danger zone ── -->
+  <div class="account-card danger-zone" id="dangerCard">
+    <div class="account-card__title">Sign out</div>
+    <p>This will end your current session on this device.</p>
+    <button class="btn btn--danger" onclick="signOut()">Sign out</button>
+  </div>
+
+</main>
+
+<div id="odb-footer"></div>
+<script src="js/components.js"></script>
+
+<script>
+  // ── Load user data and render cards ──
+  async function loadAccount() {
+    try {
+      const res  = await fetch('/api/account');
+      if (res.status === 401) { window.location.href = '/login?redirect=/account'; return; }
+      const user = await res.json();
+
+      // Update page heading with name
+      document.getElementById('pageHeading').textContent = `Hi, ${user.name.split(' ')[0]}`;
+
+      // Show admin console link if user is an admin
+      if (user.is_admin) {
+        const adminLink = document.getElementById('admin-console-link');
+        if (adminLink) adminLink.style.display = '';
+      }
+
+      // ── Profile card ──
+      document.getElementById('profileCard').innerHTML = `
+        <div class="account-card__title">Profile</div>
+        <div class="msg error" id="profileError"></div>
+        <div class="msg success" id="profileSuccess"></div>
+        <div class="field">
+          <label for="name">Full name</label>
+          <input type="text" id="name" value="${escHtml(user.name)}" />
+        </div>
+        <div class="field">
+          <label for="role">Role</label>
+          <select id="role">
+            ${['Dispensing Optician','Optometrist','Optical Assistant','Student','Other']
+              .map(r => `<option value="${r}" ${user.role === r ? 'selected' : ''}>${r}</option>`)
+              .join('')}
+          </select>
+        </div>
+        <div class="meta-row">
+          <span>Member since ${new Date(user.created_at).toLocaleDateString('en-NZ', { month: 'long', year: 'numeric' })}</span>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn--primary" id="profileBtn" onclick="updateProfile()">
+            <span class="btn__text">Save changes</span>
+            <span class="btn__spinner"></span>
+          </button>
+        </div>
+      `;
+
+      // ── Email card ──
+      document.getElementById('emailCard').innerHTML = `
+        <div class="account-card__title">Email address</div>
+        <div class="msg error" id="emailError"></div>
+        <div class="msg success" id="emailSuccess"></div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" value="${escHtml(user.email)}" />
+        </div>
+        <div class="field">
+          <label for="emailPw">Current password (required to change email)</label>
+          <input type="password" id="emailPw" placeholder="••••••••" />
+        </div>
+        <div class="btn-row">
+          <button class="btn btn--primary" id="emailBtn" onclick="updateEmail()">
+            <span class="btn__text">Update email</span>
+            <span class="btn__spinner"></span>
+          </button>
+        </div>
+      `;
+
+    } catch {
+      document.getElementById('profileCard').innerHTML =
+        `<div class="account-card__title">Profile</div><p style="color:var(--sage)">Failed to load account details. Please refresh.</p>`;
+    }
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function setLoading(btnId, on) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.disabled = on;
+    btn.classList.toggle('loading', on);
+  }
+
+  function showMsg(id, type, text) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = `msg ${type} visible`;
+    el.textContent = text;
+    setTimeout(() => el.classList.remove('visible'), 5000);
+  }
+
+  // ── Update profile (name + role) ──
+  async function updateProfile() {
+    const name = document.getElementById('name')?.value.trim();
+    const role = document.getElementById('role')?.value;
+    if (!name) { showMsg('profileError', 'error', 'Name cannot be empty.'); return; }
+
+    setLoading('profileBtn', true);
+    try {
+      const res  = await fetch('/api/account/profile', {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ name, role })
+      });
+      const data = await res.json();
+      if (!res.ok) { showMsg('profileError', 'error', data.error || 'Update failed.'); }
+      else {
+        showMsg('profileSuccess', 'success', 'Profile updated.');
+        document.getElementById('pageHeading').textContent = `Hi, ${name.split(' ')[0]}`;
+      }
+    } catch { showMsg('profileError', 'error', 'Network error. Please try again.'); }
+    setLoading('profileBtn', false);
+  }
+
+  // ── Update email ──
+  async function updateEmail() {
+    const email    = document.getElementById('email')?.value.trim();
+    const password = document.getElementById('emailPw')?.value;
+    if (!email)    { showMsg('emailError', 'error', 'Please enter an email address.'); return; }
+    if (!password) { showMsg('emailError', 'error', 'Please enter your current password.'); return; }
+
+    setLoading('emailBtn', true);
+    try {
+      const res  = await fetch('/api/account/email', {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) { showMsg('emailError', 'error', data.error || 'Update failed.'); }
+      else {
+        showMsg('emailSuccess', 'success', 'Email updated.');
+        document.getElementById('emailPw').value = '';
+      }
+    } catch { showMsg('emailError', 'error', 'Network error. Please try again.'); }
+    setLoading('emailBtn', false);
+  }
+
+  // ── Update password ──
+  async function updatePassword() {
+    const current = document.getElementById('currentPw').value;
+    const newPw   = document.getElementById('newPw').value;
+    const confirm = document.getElementById('confirmPw').value;
+
+    if (!current)        { showMsg('pwError', 'error', 'Please enter your current password.'); return; }
+    if (!newPw)          { showMsg('pwError', 'error', 'Please enter a new password.'); return; }
+    if (newPw.length < 8){ showMsg('pwError', 'error', 'New password must be at least 8 characters.'); return; }
+    if (newPw !== confirm){ showMsg('pwError', 'error', 'New passwords do not match.'); return; }
+
+    setLoading('pwBtn', true);
+    try {
+      const res  = await fetch('/api/account/password', {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ currentPassword: current, newPassword: newPw })
+      });
+      const data = await res.json();
+      if (!res.ok) { showMsg('pwError', 'error', data.error || 'Update failed.'); }
+      else {
+        showMsg('pwSuccess', 'success', 'Password updated successfully.');
+        document.getElementById('currentPw').value = '';
+        document.getElementById('newPw').value = '';
+        document.getElementById('confirmPw').value = '';
+      }
+    } catch { showMsg('pwError', 'error', 'Network error. Please try again.'); }
+    setLoading('pwBtn', false);
+  }
+
+  // ── Sign out ──
+  async function signOut() {
+    await fetch('/auth/logout', { method: 'POST' }).catch(() => {});
+    window.location.href = '/login';
+  }
+
+  loadAccount();
+</script>
+
+</body>
+</html>
