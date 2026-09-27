@@ -561,7 +561,7 @@
       }
       .odb-agent-header__sub {
         font-size: 0.72rem;
-        color: #3d5248;
+        color: #7a9488;
         margin-top: 1px;
       }
       .odb-agent-header__close {
@@ -612,7 +612,7 @@
       .odb-agent-msg.system {
         align-self: center;
         background: transparent;
-        color: #3d5248;
+        color: #9ab5aa;
         font-size: 0.75rem;
         text-align: center;
         padding: 4px 8px;
@@ -695,7 +695,7 @@
       }
       .odb-agent-gate p {
         font-size: 0.82rem;
-        color: #5f776c;
+        color: #b8ccc4;
         line-height: 1.55;
         margin: 0;
       }
@@ -926,7 +926,7 @@
         <div class="odb-agent-header">
           <div>
             <div class="odb-agent-header__title">Dispensing Assistant</div>
-            <div class="odb-agent-header__sub">Members only &middot; Clinical queries only</div>
+            <div class="odb-agent-header__sub">Members only &middot; Always verify clinically</div>
           </div>
           <button class="odb-agent-header__close" onclick="ODB.agentClose()" aria-label="Close">&times;</button>
         </div>
@@ -1186,7 +1186,10 @@ agentToggle() {
           return;
         }
         if (!res.ok) {
-          this._agentRenderMsg('system', 'Something went wrong — please try again.');
+          const err = await res.json().catch(() => ({}));
+          // Drop the unanswered question so the next request stays valid
+          this._agentMessages.pop();
+          this._agentRenderMsg('system', err.error || 'Something went wrong — please try again.');
           return;
         }
 

@@ -874,6 +874,13 @@ document.getElementById("clear-filters").addEventListener("click", () => {
   rerender();
 });
 
+// Escape text before putting it into HTML, so lens data can never inject code
+function esc(v) {
+  return String(v ?? "")
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+
 function getTags(lens) {
   let tags = lens.tags ? lens.tags.split(",") : [];
   if (lens.index >= 1.74)      tags.push("Ultra Thin");
@@ -922,18 +929,18 @@ function render(type) {
 
     item.innerHTML = `
       <div class="name-cell">
-        <div class="lens-name">${lens.name}</div>
-        <div class="tag-row">${tags.map(t => `<span class="tag ${currentTags.includes(t.toLowerCase())?'active':''}" data-tag="${t.toLowerCase()}">${t}</span>`).join("")}</div>
+        <div class="lens-name">${esc(lens.name)}</div>
+        <div class="tag-row">${tags.map(t => `<span class="tag ${currentTags.includes(t.toLowerCase())?'active':''}" data-tag="${esc(t.toLowerCase())}">${esc(t)}</span>`).join("")}</div>
         <button class="cmp-btn ${isAdded?'added':''}">${isAdded ? '✓ Added' : '+ Compare'}</button>
       </div>
-      <div data-label="Company">${lens.company}</div>
+      <div data-label="Company">${esc(lens.company)}</div>
       <div data-label="Index">
   ${lens.index
-    ? lens.index.split(",").map(i => `<span class="index-badge">${i.trim()}</span>`).join(" ")
+    ? lens.index.split(",").map(i => `<span class="index-badge">${esc(i.trim())}</span>`).join(" ")
     : "—"}
 </div>
-      <div data-label="Corridors">${lens.corridors||"—"}</div>
-      <div data-label="Coatings">${lens.coatings||"—"}</div>
+      <div data-label="Corridors">${esc(lens.corridors||"—")}</div>
+      <div data-label="Coatings">${esc(lens.coatings||"—")}</div>
     `;
 
     item.querySelectorAll(".tag").forEach(el => {
@@ -983,19 +990,19 @@ function toggleCompare(lens, el) {
 
 function updateCompareBar() {
   const bar = document.getElementById("compare-bar");
-  document.getElementById("compare-items").innerHTML = selectedLenses.map(l=>`<span class="cmp-bar__item">${l.name}</span>`).join("");
+  document.getElementById("compare-items").innerHTML = selectedLenses.map(l=>`<span class="cmp-bar__item">${esc(l.name)}</span>`).join("");
   bar.classList.toggle("hidden", selectedLenses.length === 0);
 }
 
 function openCompare() {
   document.getElementById("compare-carousel").innerHTML = selectedLenses.map(lens => `
     <div class="cmp-card">
-      <div class="co">${lens.company}</div>
-      <h3>${lens.name}</h3>
-      <div class="cmp-spec-row"><span>Index</span><span>${lens.index||"—"}</span></div>
-      <div class="cmp-spec-row"><span>Corridors</span><span>${lens.corridors||"—"}</span></div>
-      <div class="cmp-spec-row"><span>Coatings</span><span>${lens.coatings||"—"}</span></div>
-      <p class="cmp-desc">${lens.description||""}</p>
+      <div class="co">${esc(lens.company)}</div>
+      <h3>${esc(lens.name)}</h3>
+      <div class="cmp-spec-row"><span>Index</span><span>${esc(lens.index||"—")}</span></div>
+      <div class="cmp-spec-row"><span>Corridors</span><span>${esc(lens.corridors||"—")}</span></div>
+      <div class="cmp-spec-row"><span>Coatings</span><span>${esc(lens.coatings||"—")}</span></div>
+      <p class="cmp-desc">${esc(lens.description||"")}</p>
     </div>
   `).join("");
   document.getElementById("compare-overlay").classList.remove("hidden");

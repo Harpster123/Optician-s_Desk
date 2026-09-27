@@ -22,9 +22,10 @@
     "cookie-parser": "^1.4.7",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.1.1",
-    "mysql2": "^3.19.0",
-    "sqlite3": "^5.0.2"
+    "mysql2": "^3.19.0"
   }
 }

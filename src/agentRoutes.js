@@ -10,6 +10,7 @@
 
 const express = require("express");
 const jwt     = require("jsonwebtoken");
+const { rateLimit } = require("express-rate-limit");
 const router  = express.Router();
 
 // ── Constants ─────────────────────────────────────────────────
@@ -18,6 +19,22 @@ const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 const MODEL             = "claude-haiku-4-5-20251001";
 const MAX_TOKENS        = 512;  // Tight cap — responses should be concise
 const MAX_TURNS         = 16;   // Trim history to control input tokens
+const MAX_MSG_CHARS     = 2000; // Longest single message a user can send
+const MAX_TOTAL_CHARS   = 12000;// Cap on the whole conversation sent per request
+
+// ── Usage limits (per member, protects your API bill) ─────────
+// Short burst limit: 20 questions per 10 minutes
+const burstLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, limit: 20, standardHeaders: "draft-8", legacyHeaders: false,
+  keyGenerator: (req) => `user:${req.user.id}`,
+  message: { error: "You're asking questions very quickly — please wait a few minutes." }
+});
+// Daily cap: 150 questions per 24 hours. (Counts reset if the server restarts.)
+const dailyLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000, limit: 150, standardHeaders: "draft-8", legacyHeaders: false,
+  keyGenerator: (req) => `user:${req.user.id}`,
+  message: { error: "You've reached today's limit for the assistant. It resets in 24 hours." }
+});
 
 // ── Standardised Tag Taxonomy ─────────────────────────────────
 // Single source of truth for all lens tags in the DB.
@@ -237,10 +254,12 @@ async function findLensByName(db, name) {
 }
 
 async function findSimilarLenses(db, sourceLens, excludeId = null) {
-  const tags    = parseTags(sourceLens.tags);
+  const tags    = parseTags(sourceLens.tags).slice(0, 10);
+  // Placeholders (?) instead of pasting tag text into the SQL
   const tagLike = tags.length
-    ? tags.map(t => `tags LIKE '%${t}%'`).join(" OR ")
+    ? tags.map(() => "tags LIKE ?").join(" OR ")
     : "1=0";
+  const tagParams = tags.map(t => `%${t.replace(/[%_\\]/g, "\\$&")}%`);
 
   const sql = `
     SELECT * FROM lenses
@@ -256,7 +275,8 @@ async function findSimilarLenses(db, sourceLens, excludeId = null) {
   const rows = await queryDB(db, sql, [
     excludeId || 0,
     sourceLens.type, sourceLens.index,
-    sourceLens.type
+    sourceLens.type,
+    ...tagParams
   ]);
 
   return rows
@@ -284,7 +304,6 @@ return rows.map(l =>
 
 async function buildLensContext(db, message, lensFilter) {
   const mentionedName = extractMentionedLensName(message);
-  console.log("DEBUG mentionedName:", mentionedName);
 
   const typeMap = {
     "progressive": "progressives",
@@ -297,11 +316,9 @@ async function buildLensContext(db, message, lensFilter) {
   const detectedType = Object.entries(typeMap).reduce((found, [keyword, dbType]) => {
     return !found && message.toLowerCase().includes(keyword) ? dbType : found;
   }, null);
-  console.log("DEBUG detectedType:", detectedType);
 
   const corridorMatch = message.match(/(\d+)\s*mm/i);
   const corridor = corridorMatch ? corridorMatch[1] + 'mm' : null;
-  console.log("DEBUG corridor:", corridor);
 
   if (mentionedName) {
     const sourceLens = await findLensByName(db, mentionedName);
@@ -350,7 +367,6 @@ if (candidates.length) {
     const lines = candidates.map(l =>
       `${l.name} (${l.company}) | ${l.type} | idx:${l.index} | corridor:${l.corridors || "n/a"} | coatings:${l.coatings || ""} | tags:${l.tags || ""}`
     );
-    console.log("DEBUG context sent to Claude:", lines);
     return `\nAVAILABLE LENSES:\n${lines.join("\n")}`;
   }
 
@@ -375,21 +391,40 @@ router.get("/ping", requirePaidUser, (req, res) => {
 
 // ── POST /api/agent/chat ──────────────────────────────────────
 
-router.post("/chat", requirePaidUser, async (req, res) => {
-  const { messages, lensFilter } = req.body;
+router.post("/chat", requirePaidUser, burstLimiter, dailyLimiter, async (req, res) => {
+  const { messages, lensFilter } = req.body || {};
 
   if (!Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: "messages array required" });
   }
 
+  // Only accept plain-text user/assistant turns of sensible length
+  const valid = messages.every(m =>
+    m && (m.role === "user" || m.role === "assistant") &&
+    typeof m.content === "string" && m.content.length <= MAX_MSG_CHARS
+  );
+  if (!valid) {
+    return res.status(400).json({ error: `Messages must be text under ${MAX_MSG_CHARS} characters` });
+  }
+
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(500).json({ error: "API key not configured" });
 
-  const trimmed = messages.slice(-MAX_TURNS);
+  let trimmed = messages.slice(-MAX_TURNS).map(m => ({ role: m.role, content: m.content }));
+  // Drop oldest turns until the conversation fits the size cap
+  while (trimmed.length > 1 && trimmed.reduce((n, m) => n + m.content.length, 0) > MAX_TOTAL_CHARS) {
+    trimmed = trimmed.slice(1);
+  }
+  // Claude expects the conversation to start with a user turn and end with one
+  while (trimmed.length && trimmed[0].role !== "user") trimmed = trimmed.slice(1);
+  if (!trimmed.length || trimmed[trimmed.length - 1].role !== "user") {
+    return res.status(400).json({ error: "Last message must be from the user" });
+  }
   const lastMsg = trimmed[trimmed.length - 1]?.content || "";
 
   const db          = router.db;
-  const lensContext = db ? await buildLensContext(db, lastMsg, lensFilter) : "";
+  const safeFilter  = lensFilter && typeof lensFilter.type === "string" ? { type: lensFilter.type.slice(0, 40) } : {};
+  const lensContext = db ? await buildLensContext(db, lastMsg, safeFilter) : "";
   const healthCtx   = buildHealthContext(lastMsg);
 
   // Append DB context to final user message only — keeps system prompt lean

@@ -6,6 +6,8 @@ const bcrypt   = require("bcryptjs");
 const cookie   = require("cookie-parser");
 const multer   = require("multer");
 const crypto   = require("crypto");
+const helmet   = require("helmet");
+const { rateLimit } = require("express-rate-limit");
 
 require("dotenv").config();
 
@@ -13,6 +15,54 @@ const { sendEmail, passwordResetEmail } = require("./src/email");
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
+
+// Safety net: log unexpected async errors instead of letting one bad request crash the server
+process.on("unhandledRejection", (err) => {
+  console.error("Unhandled error (server kept running):", err);
+});
+
+// When hosted behind a proxy/load balancer (Render, Railway, Fly etc.), set TRUST_PROXY=1
+// in .env so rate limits see each visitor's real IP address instead of the proxy's.
+if (process.env.TRUST_PROXY) app.set("trust proxy", Number(process.env.TRUST_PROXY) || 1);
+
+// ── Security headers ──────────────────────────────────────────
+app.disable("x-powered-by");
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc:     ["'self'"],
+      scriptSrc:      ["'self'", "'unsafe-inline'"],   // pages use inline <script> blocks
+      scriptSrcAttr:  ["'unsafe-inline'"],             // and onclick="" handlers
+      styleSrc:       ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc:        ["'self'", "https://fonts.gstatic.com"],
+      imgSrc:         ["'self'", "data:"],
+      connectSrc:     ["'self'"],
+      formAction:     ["'self'"],
+      frameAncestors: ["'none'"],                      // stop other sites framing this one
+      objectSrc:      ["'none'"],
+      baseUri:        ["'self'"]
+    }
+  }
+}));
+
+// ── Rate limits ───────────────────────────────────────────────
+const limitMessage = (msg) => ({ error: msg });
+
+// Login / register / admin login: 20 attempts per 15 minutes per IP
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: "draft-8", legacyHeaders: false,
+  message: limitMessage("Too many attempts — please wait 15 minutes and try again.")
+});
+
+// Password reset emails: 5 per hour per IP (protects your inboxes and Resend quota)
+const resetLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, limit: 5, standardHeaders: "draft-8", legacyHeaders: false,
+  message: limitMessage("Too many reset requests — please try again in an hour.")
+});
+
+// ── Input helpers ─────────────────────────────────────────────
+const isText = (v, max = 200) => typeof v === "string" && v.trim().length > 0 && v.length <= max;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // The site's public address, used in links inside emails.
 // Set APP_URL in .env once the site is live, e.g. https://opticiansdesk.co.nz
@@ -119,17 +169,26 @@ async function signUserTokenFromDB(userId) {
 //   1. adminToken cookie (legacy .env-based super admin fallback)
 //   2. userToken cookie where is_admin === true (unified user auth)
 function requireAuth(req, res, next) {
-  // Try userToken with is_admin first
+  // Try userToken first — admin status is checked in the database every time,
+  // so removing someone's admin rights takes effect immediately.
   const userToken = req.cookies?.userToken;
   if (userToken) {
-    try {
-      const decoded = jwt.verify(userToken, USER_JWT_SECRET);
-      if (decoded.is_admin) {
-        req.admin = decoded;
-        return next();
-      }
-    } catch {}
+    let decoded = null;
+    try { decoded = jwt.verify(userToken, USER_JWT_SECRET); } catch {}
+    if (decoded) {
+      return db.query("SELECT is_admin FROM users WHERE id = ?", [decoded.id], (err, rows) => {
+        if (!err && rows.length && rows[0].is_admin) {
+          req.admin = { ...decoded, is_admin: true };
+          return next();
+        }
+        return checkLegacyAdmin(req, res, next);
+      });
+    }
   }
+  return checkLegacyAdmin(req, res, next);
+}
+
+function checkLegacyAdmin(req, res, next) {
 
   // Fall back to legacy adminToken (.env super admin)
   const adminToken = req.cookies?.adminToken;
@@ -241,11 +300,19 @@ app.get("/reset-password", (req, res) => {
 
 // ── User auth API ─────────────────────────────────────────────
 
-app.post("/auth/register", async (req, res) => {
-  const { name, email, password, role } = req.body;
+app.post("/auth/register", authLimiter, async (req, res) => {
+  const { name, email, password, role } = req.body || {};
 
-  if (!name || !email || !password) {
+  if (!isText(name, 100) || !isText(email, 254) || typeof password !== "string" || !password) {
     return res.status(400).json({ error: "Name, email and password are required" });
+  }
+
+  if (!EMAIL_RE.test(email.trim())) {
+    return res.status(400).json({ error: "Please enter a valid email address" });
+  }
+
+  if (password.length > 200) {
+    return res.status(400).json({ error: "Password is too long" });
   }
 
   if (password.length < 8) {
@@ -291,10 +358,10 @@ app.post("/auth/register", async (req, res) => {
   });
 });
 
-app.post("/auth/login", async (req, res) => {
-  const { email, password } = req.body;
+app.post("/auth/login", authLimiter, async (req, res) => {
+  const { email, password } = req.body || {};
 
-  if (!email || !password) {
+  if (!isText(email, 254) || typeof password !== "string" || !password || password.length > 200) {
     return res.status(400).json({ error: "Email and password are required" });
   }
 
@@ -336,9 +403,9 @@ app.post("/auth/logout", (req, res) => {
   res.redirect("/login");
 });
 
-app.post("/auth/forgot-password", (req, res) => {
-  const { email } = req.body;
-  if (!email) return res.status(400).json({ error: "Email is required" });
+app.post("/auth/forgot-password", resetLimiter, (req, res) => {
+  const { email } = req.body || {};
+  if (!isText(email, 254)) return res.status(400).json({ error: "Email is required" });
 
   // Always return generic success so we don't leak which emails are registered
   const genericResponse = { ok: true, message: "If that email is registered you'll receive a reset link shortly." };
@@ -369,10 +436,10 @@ app.post("/auth/forgot-password", (req, res) => {
   });
 });
 
-app.post("/auth/reset-password", async (req, res) => {
-  const { token, password } = req.body;
+app.post("/auth/reset-password", authLimiter, async (req, res) => {
+  const { token, password } = req.body || {};
 
-  if (!token || !password) {
+  if (!isText(token, 128) || typeof password !== "string" || !password || password.length > 200) {
     return res.status(400).json({ error: "Token and new password are required" });
   }
 
@@ -439,8 +506,8 @@ app.get("/api/account", requireUserAuth, (req, res) => {
 
 // PATCH profile (name + role)
 app.patch("/api/account/profile", requireUserAuth, (req, res) => {
-  const { name, role } = req.body;
-  if (!name) return res.status(400).json({ error: "Name is required" });
+  const { name, role } = req.body || {};
+  if (!isText(name, 100)) return res.status(400).json({ error: "Name is required" });
 
   const VALID_ROLES = ["Dispensing Optician","Optometrist","Optical Assistant","Student","Other"];
   const safeRole = VALID_ROLES.includes(role) ? role : "Other";
@@ -457,8 +524,9 @@ app.patch("/api/account/profile", requireUserAuth, (req, res) => {
 
 // PATCH email (requires password confirmation)
 app.patch("/api/account/email", requireUserAuth, async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ error: "Email and password are required" });
+  const { email, password } = req.body || {};
+  if (!isText(email, 254) || typeof password !== "string" || !password) return res.status(400).json({ error: "Email and password are required" });
+  if (!EMAIL_RE.test(email.trim())) return res.status(400).json({ error: "Please enter a valid email address" });
 
   // Verify current password first
   db.query("SELECT password_hash FROM users WHERE id = ?", [req.user.id], async (err, rows) => {
@@ -486,8 +554,10 @@ app.patch("/api/account/email", requireUserAuth, async (req, res) => {
 
 // PATCH password
 app.patch("/api/account/password", requireUserAuth, async (req, res) => {
-  const { currentPassword, newPassword } = req.body;
-  if (!currentPassword || !newPassword) return res.status(400).json({ error: "Both passwords are required" });
+  const { currentPassword, newPassword } = req.body || {};
+  if (typeof currentPassword !== "string" || typeof newPassword !== "string" || !currentPassword || !newPassword)
+    return res.status(400).json({ error: "Both passwords are required" });
+  if (newPassword.length > 200) return res.status(400).json({ error: "New password is too long" });
   if (newPassword.length < 8) return res.status(400).json({ error: "New password must be at least 8 characters" });
 
   db.query("SELECT password_hash FROM users WHERE id = ?", [req.user.id], async (err, rows) => {
@@ -523,8 +593,11 @@ app.get("/admin/login", (req, res) => {
 });
 
 // Handle admin login
-app.post("/admin/login", async (req, res) => {
-  const { username, password } = req.body;
+app.post("/admin/login", authLimiter, async (req, res) => {
+  const { username, password } = req.body || {};
+  if (typeof username !== "string" || typeof password !== "string") {
+    return res.status(401).json({ error: "Invalid username or password" });
+  }
 
   const validUser = process.env.ADMIN_USERNAME;
   const validHash = process.env.ADMIN_PASSWORD_HASH;
@@ -573,6 +646,9 @@ app.get("/api/admin/users", requireAuth, (req, res) => {
 
 app.patch("/api/admin/users/:id/toggle-admin", requireAuth, (req, res) => {
   const id = parseInt(req.params.id, 10);
+  if (req.admin?.id === id) {
+    return res.status(400).json({ error: "You can't remove your own admin access" });
+  }
 
   db.query("SELECT is_admin FROM users WHERE id = ?", [id], (err, rows) => {
     if (err) return res.status(500).json({ error: "Database error" });
@@ -661,12 +737,11 @@ app.put("/api/admin/lenses/:id", requireAuth, (req, res) => {
 
 app.delete("/api/admin/lenses/:id", requireAuth, (req, res) => {
   const id = parseInt(req.params.id, 10);
-  console.log("Delete route hit, parsed id:", id);
 
   db.query("DELETE FROM lenses WHERE id = ?", [id], (err, result) => {
     if (err) {
       console.error("Delete error:", err);
-      return res.status(500).json({ error: err.message });
+      return res.status(500).json({ error: "Failed to delete lens" });
     }
     if (result.affectedRows === 0) return res.status(404).json({ error: "Lens not found" });
     res.json({ ok: true });
@@ -736,7 +811,7 @@ app.post("/api/admin/lenses/csv-import", requireAuth, (req, res) => {
   db.query(sql, [values], (err, result) => {
     if (err) {
       console.error("CSV import error:", err);
-      return res.status(500).json({ error: "Import failed: " + err.message });
+      return res.status(500).json({ error: "Import failed — check the CSV and try again" });
     }
     res.json({ ok: true, imported: result.affectedRows });
   });
@@ -752,6 +827,16 @@ app.use("/api/agent", agentRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
+});
+
+// ── Errors (bad JSON, oversized uploads etc.) ─────────────────
+app.use((err, req, res, next) => {
+  if (err.type === "entity.parse.failed") return res.status(400).json({ error: "Invalid request" });
+  if (err.message === "Only CSV files are allowed" || err.code === "LIMIT_FILE_SIZE") {
+    return res.status(400).json({ error: err.message });
+  }
+  console.error("Request error:", err);
+  res.status(500).json({ error: "Something went wrong" });
 });
 
 // ── 404 ───────────────────────────────────────────────────────
