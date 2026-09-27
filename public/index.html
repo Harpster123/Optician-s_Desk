@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Optician's Desk — NZ Dispensing Reference</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
+  <style>
+    /* ── Design tokens (matching lenses.html) ── */
+    :root {
+      --forest:   #1a2e26;
+      --pine:     #2f4a3e;
+      --sage:     #5f776c;
+      --mist:     #e8eeeb;
+      --ink:      #1a1f1c;
+      --ink-2:    #4a5450;
+      --line:     rgba(0,0,0,0.07);
+      --bg:       #f0f3f1;
+      --card:     #ffffff;
+      --radius:   14px;
+    }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(47,74,62,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 110%, rgba(95,119,108,0.06) 0%, transparent 60%);
+      color: var(--ink);
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    /* ── Page body ── */
+    .hp-body {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 40px 32px 80px;
+    }
+
+    /* ── Section label ── */
+    .section-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--sage);
+      margin-bottom: 14px;
+    }
+
+    /* ── Hero ── */
+    .hp-hero {
+      margin-bottom: 44px;
+    }
+
+    .hp-hero__eyebrow {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--sage);
+      margin-bottom: 10px;
+    }
+
+    .hp-hero h1 {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 2.6rem;
+      color: var(--forest);
+      margin: 0 0 12px;
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+    }
+
+    .hp-hero h1 em {
+      font-style: italic;
+      color: var(--sage);
+    }
+
+    .hp-hero p {
+      color: var(--ink-2);
+      font-size: 1rem;
+      margin: 0;
+      max-width: 500px;
+      line-height: 1.65;
+    }
+
+    /* ── Calculator carousel ── */
+    .calc-section { margin-bottom: 48px; }
+
+    .carousel-wrap {
+      position: relative;
+      padding: 0 28px;
+    }
+
+    .carousel-track-outer {
+      overflow: hidden;
+      border-radius: var(--radius);
+    }
+
+    .carousel-track {
+      display: flex;
+      gap: 16px;
+      transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Calc card */
+    .calc-card {
+      flex: 0 0 calc((100% - 32px) / 3);
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid rgba(0,0,0,0.06);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+      overflow: hidden;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .calc-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 14px 36px rgba(0,0,0,0.11);
+    }
+
+    .calc-card__illus {
+      background: #f4f7f5;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 155px;
+      padding: 16px;
+    }
+
+    .calc-card__illus svg {
+      width: 100%;
+      height: 100%;
+      max-width: 155px;
+      max-height: 125px;
+    }
+
+    .calc-card__body { padding: 18px 20px 20px; }
+
+    .calc-card__body h3 {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 1.02rem;
+      font-weight: 400;
+      color: var(--forest);
+      margin: 0 0 6px;
+    }
+
+    .calc-card__body p {
+      font-size: 0.82rem;
+      color: var(--ink-2);
+      margin: 0 0 14px;
+      line-height: 1.5;
+    }
+
+    .calc-card__cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--pine);
+      letter-spacing: 0.02em;
+    }
+
+    .calc-card__cta svg {
+      width: 11px; height: 11px;
+      stroke: var(--pine); fill: none;
+      stroke-width: 2.2; stroke-linecap: round;
+      transition: transform 0.15s;
+    }
+
+    .calc-card:hover .calc-card__cta svg { transform: translateX(3px); }
+
+    /* Carousel nav */
+    .carousel-btn {
+      position: absolute;
+      top: 68px;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: var(--card);
+      border: 1px solid rgba(0,0,0,0.10);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; z-index: 2; padding: 0;
+      transition: background 0.15s;
+    }
+
+    .carousel-btn:hover { background: var(--mist); }
+    .carousel-btn svg { width: 16px; height: 16px; stroke: var(--pine); fill: none; stroke-width: 2.2; stroke-linecap: round; }
+    .carousel-btn--prev { left: 0; }
+    .carousel-btn--next { right: 0; }
+    .carousel-btn:disabled { opacity: 0.28; cursor: default; pointer-events: none; }
+
+    /* Dots */
+    .carousel-dots { display: flex; justify-content: center; gap: 7px; margin-top: 16px; }
+
+    .carousel-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #c8d4ce;
+      border: none; padding: 0;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    .carousel-dot.active { background: var(--sage); transform: scale(1.3); }
+
+    /* ── Quick Reference ── */
+    .qref-section { margin-bottom: 48px; }
+
+    .qref-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.5fr 1fr;
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .qref-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid rgba(0,0,0,0.06);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .qref-card__head {
+      background: var(--forest);
+      padding: 13px 18px;
+    }
+
+    .qref-card__head h4 {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 0.95rem;
+      font-weight: 400;
+      color: #fff;
+      margin: 0;
+    }
+
+    .qref-card__head p {
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.45);
+      margin: 3px 0 0;
+    }
+
+    .qref-card__body { padding: 14px 18px 16px; flex: 1; display: flex; flex-direction: column; }
+
+    .qref-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+      font-size: 0.83rem;
+      gap: 10px;
+    }
+
+    .qref-row:last-child { border-bottom: none; }
+    .qref-row__label { color: var(--ink-2); flex: 1; line-height: 1.4; }
+    .qref-row__val { font-weight: 600; color: var(--pine); font-size: 0.82rem; text-align: right; flex-shrink: 0; }
+
+    .qref-note {
+      font-size: 0.74rem;
+      color: var(--sage);
+      margin-top: auto;
+      padding-top: 10px;
+      border-top: 1px solid rgba(0,0,0,0.05);
+      line-height: 1.55;
+    }
+
+    /* Lens diagram */
+    .lens-diagram {
+      background: #f4f7f5;
+      border-radius: 10px;
+      padding: 10px 8px 6px;
+      margin-bottom: 12px;
+    }
+
+    .lens-diagram svg { width: 100%; height: auto; display: block; }
+
+    /* ── Database strip ── */
+    .db-section { }
+
+    .db-strip {
+      background: var(--forest);
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .db-strip__stats {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .db-stat { display: flex; flex-direction: column; gap: 3px; }
+
+    .db-stat__num {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 1.7rem;
+      color: #fff;
+      line-height: 1;
+    }
+
+    .db-stat__label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+    }
+
+    .db-strip__divider {
+      width: 1px;
+      height: 38px;
+      background: rgba(255,255,255,0.12);
+      flex-shrink: 0;
+    }
+
+    .db-strip__updated {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.35);
+    }
+
+    .db-strip__right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .db-strip__search { position: relative; }
+
+    .db-strip__search svg {
+      position: absolute;
+      left: 12px; top: 50%;
+      transform: translateY(-50%);
+      width: 14px; height: 14px;
+      stroke: rgba(255,255,255,0.4);
+      fill: none; stroke-width: 1.8; stroke-linecap: round;
+      pointer-events: none;
+    }
+
+    .db-strip__search input {
+      padding: 10px 14px 10px 34px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      font-size: 0.88rem;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      width: 230px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .db-strip__search input::placeholder { color: rgba(255,255,255,0.28); }
+
+    .db-strip__search input:focus {
+      border-color: rgba(255,255,255,0.35);
+      background: rgba(255,255,255,0.12);
+    }
+
+    .db-strip__btn {
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: none;
+      background: var(--sage);
+      color: #fff;
+      font-size: 0.88rem;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .db-strip__btn:hover { background: #4e6459; }
+
+    .dark-btn {
+      margin-left: 8px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: transparent;
+      color: rgba(255,255,255,0.6);
+      font-size: 0.82rem;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .dark-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+
+    /* ── Hamburger ── */
+    .odb-hamburger {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      width: 36px; height: 36px;
+      background: transparent; border: none;
+      cursor: pointer; padding: 4px;
+    }
+
+    .odb-hamburger span {
+      display: block; width: 22px; height: 2px;
+      background: rgba(255,255,255,0.7);
+      border-radius: 2px; transition: all 0.2s;
+    }
+
+    .odb-hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .odb-hamburger.open span:nth-child(2) { opacity: 0; }
+    .odb-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    .odb-mobile-nav {
+      display: none; flex-direction: column;
+      background: #162820;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 8px 16px 16px; gap: 4px;
+    }
+
+    .odb-mobile-nav.open { display: flex; }
+
+    .odb-mobile-nav a {
+      color: rgba(255,255,255,0.7); text-decoration: none;
+      font-size: 0.95rem; font-weight: 500;
+      padding: 10px 12px; border-radius: 8px;
+      transition: color 0.15s, background 0.15s;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .odb-mobile-nav a:hover  { color: #fff; background: rgba(255,255,255,0.08); }
+    .odb-mobile-nav a.active { color: #fff; background: rgba(255,255,255,0.12); }
+
+    .dark-btn-mobile {
+      margin-top: 4px; padding: 10px 12px; border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: transparent; color: rgba(255,255,255,0.6);
+      font-size: 0.88rem; font-family: 'DM Sans', sans-serif;
+      cursor: pointer; text-align: left;
+      transition: all 0.15s; width: 100%;
+    }
+
+    .dark-btn-mobile:hover { background: rgba(255,255,255,0.08); color: #fff; }
+
+    @media (max-width: 640px) {
+      .odb-nav       { display: none; }
+      .odb-hamburger { display: flex; }
+    }
+
+    /* ── Dark mode ── */
+    body.dark {
+      background: #111916;
+      color: #d8e4df;
+    }
+
+    body.dark .hp-hero h1       { color: #c8ddd6; }
+    body.dark .hp-hero p        { color: #7a9488; }
+    body.dark .hp-hero__eyebrow { color: #5f776c; }
+
+    body.dark .calc-card {
+      background: #1c2620;
+      border-color: #263028;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+    }
+
+    body.dark .calc-card__illus {
+      background: #222e28;
+      border-color: #263028;
+    }
+
+    body.dark .calc-card__illus svg line,
+    body.dark .calc-card__illus svg path,
+    body.dark .calc-card__illus svg circle,
+    body.dark .calc-card__illus svg polygon,
+    body.dark .calc-card__illus svg polyline { stroke: #8aada0; }
+
+    body.dark .calc-card__illus svg text { fill: #7fa898; }
+
+    body.dark .calc-card__body h3 { color: #c0d8d0; }
+    body.dark .calc-card__body p  { color: #6a8878; }
+    body.dark .calc-card__cta     { color: #7fa898; }
+    body.dark .calc-card__cta svg { stroke: #7fa898; }
+
+    body.dark .section-label { color: #5f776c; }
+
+    body.dark .qref-card {
+      background: #1c2620;
+      border-color: #263028;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+    }
+
+    body.dark .qref-card__body  { background: #1c2620; }
+    body.dark .qref-row         { border-color: rgba(255,255,255,0.06); }
+    body.dark .qref-row__label  { color: #7a9488; }
+    body.dark .qref-row__val    { color: #8fbfb0; }
+    body.dark .qref-note        { color: #4d6860; border-color: rgba(255,255,255,0.06); }
+
+    body.dark .lens-diagram      { background: #222e28; }
+
+    body.dark .carousel-dot        { background: #263028; }
+    body.dark .carousel-dot.active { background: #5f776c; }
+
+    body.dark .carousel-btn {
+      background: #1c2620;
+      border-color: #263028;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    body.dark .carousel-btn svg { stroke: #7fa898; }
+
+    body.dark .db-strip__search input {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.12);
+      color: #fff;
+    }
+
+    body.dark footer p { color: #3d5248; }
+    .hp-footer {
+      margin-top: 64px;
+      border-top: 1px solid var(--line);
+      padding: 24px 32px;
+      max-width: 1280px;
+      margin-inline: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .hp-footer p { font-size: 0.82rem; color: #9aaba5; margin: 0; }
+    .hp-footer a { color: #9aaba5; text-decoration: none; font-size: 0.82rem; }
+    .hp-footer a:hover { color: var(--sage); }
+    .hp-footer__links { display: flex; gap: 16px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 980px) {
+      .qref-grid { grid-template-columns: 1fr 1fr; }
+      .qref-grid .qref-card:last-child { grid-column: 1 / -1; }
+    }
+
+    @media (max-width: 760px) {
+      .hp-body { padding: 28px 20px 60px; }
+      .hp-hero h1 { font-size: 2rem; }
+      .carousel-wrap { padding: 0 20px; }
+      .calc-card { flex: 0 0 calc((100% - 16px) / 2); }
+      .qref-grid { grid-template-columns: 1fr; }
+      .qref-grid .qref-card:last-child { grid-column: auto; }
+      .db-strip { flex-direction: column; align-items: flex-start; }
+      .db-strip__right { width: 100%; flex-direction: column; }
+      .db-strip__search input { width: 100%; }
+      .db-strip__btn { width: 100%; text-align: center; }
+    }
+
+    @media (max-width: 500px) {
+      .calc-card { flex: 0 0 85%; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="odb-header"></div>
+
+  <!-- ── Main ── -->
+  <main class="hp-body">
+
+    <!-- Hero -->
+    <section class="hp-hero">
+      <div class="hp-hero__eyebrow">Dispensing reference — New Zealand</div>
+      <h1>Your clinical tools,<br><em>ready when you are.</em></h1>
+      <p>Quick-access calculators and lens reference for NZ dispensing opticians. Everything you reach for on the floor, in one place.</p>
+    </section>
+
+    <!-- Calculators -->
+    <section class="calc-section">
+      <div class="section-label">Calculators</div>
+      <div class="carousel-wrap">
+        <button class="carousel-btn carousel-btn--prev" id="prev-btn" aria-label="Previous" disabled>
+          <svg viewBox="0 0 16 16"><polyline points="10,4 6,8 10,12"/></svg>
+        </button>
+
+        <div class="carousel-track-outer">
+          <div class="carousel-track" id="carousel-track">
+
+            <!-- 0. Optical Cross — featured first -->
+            <a class="calc-card" href="calculators/optical-cross.html">
+              <div class="calc-card__illus">
+                <svg viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <!-- Circle -->
+                  <circle cx="80" cy="60" r="36" stroke="#3a3a3a" stroke-width="1.2"/>
+                  <!-- H arm -->
+                  <line x1="20" y1="60" x2="140" y2="60" stroke="#3a3a3a" stroke-width="1.2"/>
+                  <!-- V arm -->
+                  <line x1="80" y1="8" x2="80" y2="112" stroke="#3a3a3a" stroke-width="1.2"/>
+                  <!-- Dashed axis at ~110° -->
+                  <line x1="55" y1="33" x2="105" y2="87" stroke="#5f776c" stroke-width="1" stroke-dasharray="3 2"/>
+                  <!-- Dashed axis+90 at ~20° -->
+                  <line x1="50" y1="82" x2="110" y2="38" stroke="#5f776c" stroke-width="1" stroke-dasharray="3 2"/>
+                  <!-- Centre dot -->
+                  <circle cx="80" cy="60" r="2.5" fill="#3a3a3a"/>
+                  <!-- Power labels -->
+                  <text x="18" y="55" font-size="7" fill="#5f776c" font-family="DM Sans,sans-serif" font-weight="600">−2.00</text>
+                  <text x="80" y="6" font-size="7" fill="#5f776c" font-family="DM Sans,sans-serif" font-weight="600" text-anchor="middle">−3.50</text>
+                  <!-- R / L eye indicators -->
+                  <text x="26" y="112" font-size="7" fill="#3a3a3a" font-family="DM Sans,sans-serif">R</text>
+                  <text x="126" y="112" font-size="7" fill="#3a3a3a" font-family="DM Sans,sans-serif">L</text>
+                  <!-- Second small cross (left eye) -->
+                  <circle cx="120" cy="60" r="0" stroke="none"/>
+                </svg>
+              </div>
+              <div class="calc-card__body">
+                <h3>Optical Cross</h3>
+                <p>Visualise lens power at all principal meridians for both eyes. Compare 90°, 180°, and cylinder axis powers side by side.</p>
+                <span class="calc-card__cta">Open <svg viewBox="0 0 12 12"><polyline points="4,2 8,6 4,10"/></svg></span>
+              </div>
+            </a>
+
+            <!-- 1. Lens Size -->
+            <a class="calc-card" href="calculators/lens-size.html">
+              <div class="calc-card__illus">
+                <svg viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="80" cy="60" r="46" stroke="#3a3a3a" stroke-width="1.2"/>
+                  <circle cx="80" cy="60" r="38" stroke="#3a3a3a" stroke-width="0.8" stroke-dasharray="3 3"/>
+                  <line x1="34" y1="60" x2="126" y2="60" stroke="#3a3a3a" stroke-width="1"/>
+                  <line x1="34" y1="56" x2="34" y2="64" stroke="#3a3a3a" stroke-width="1"/>
+                  <line x1="126" y1="56" x2="126" y2="64" stroke="#3a3a3a" stroke-width="1"/>
+                  <circle cx="80" cy="60" r="2.5" stroke="#3a3a3a" stroke-width="1" fill="white"/>
+                  <text x="75" y="47" font-size="9" fill="#5f776c" font-family="DM Sans, sans-serif" font-weight="600">MBS</text>
+                </svg>
+              </div>
+              <div class="calc-card__body">
+                <h3>Lens Size (Uncut / MBS)</h3>
+                <p>Calculate minimum blank size required for a given frame and prescription.</p>
+                <span class="calc-card__cta">Open <svg viewBox="0 0 12 12"><polyline points="4,2 8,6 4,10"/></svg></span>
+              </div>
+            </a>
+
+            <!-- 2. Prism & Decentration -->
+            <a class="calc-card" href="calculators/prism-decentration.html">
+              <div class="calc-card__illus">
+                <svg viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <polygon points="80,18 128,98 32,98" stroke="#3a3a3a" stroke-width="1.2" fill="none"/>
+                  <polygon points="80,88 92,108 68,108" stroke="#3a3a3a" stroke-width="0.9" fill="none"/>
+                  <line x1="55" y1="42" x2="108" y2="75" stroke="#3a3a3a" stroke-width="1"/>
+                  <line x1="104" y1="68" x2="108" y2="75" stroke="#3a3a3a" stroke-width="1"/>
+                  <line x1="100" y1="77" x2="108" y2="75" stroke="#3a3a3a" stroke-width="1"/>
+                  <text x="110" y="66" font-size="10" fill="#5f776c" font-family="DM Sans, sans-serif">Δ</text>
+                </svg>
+              </div>
+              <div class="calc-card__body">
+                <h3>Prism &amp; Decentration</h3>
+                <p>Calculate induced prism from decentration using Prentice's rule.</p>
+                <span class="calc-card__cta">Open <svg viewBox="0 0 12 12"><polyline points="4,2 8,6 4,10"/></svg></span>
+              </div>
+            </a>
+
+            <!-- 3. Lens Thickness -->
+            <a class="calc-card" href="calculators/lens-thickness.html">
+              <div class="calc-card__illus">
+                <svg viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M76,14 Q56,60 76,106" stroke="#3a3a3a" stroke-width="1.2" fill="none"/>
+                  <path d="M84,14 Q104,60 84,106" stroke="#3a3a3a" stroke-width="1.2" fill="none"/>
+                  <line x1="76" y1="14" x2="84" y2="14" stroke="#3a3a3a" stroke-width="1"/>
+                  <line x1="76" y1="106" x2="84" y2="106" stroke="#3a3a3a" stroke-width="1"/>
+                  <line x1="80" y1="8" x2="80" y2="112" stroke="#3a3a3a" stroke-width="0.8" stroke-dasharray="3 3"/>
+                  <line x1="26" y1="60" x2="72" y2="60" stroke="#3a3a3a" stroke-width="1"/>
+                  <polyline points="30,57 26,60 30,63" stroke="#3a3a3a" stroke-width="1" fill="none"/>
+                  <line x1="88" y1="60" x2="134" y2="60" stroke="#3a3a3a" stroke-width="1"/>
+                  <polyline points="130,57 134,60 130,63" stroke="#3a3a3a" stroke-width="1" fill="none"/>
+                  <text x="73" y="56" font-size="8" fill="#5f776c" font-family="DM Sans, sans-serif" font-weight="500">ct</text>
+                </svg>
+              </div>
+              <div class="calc-card__body">
+                <h3>Lens Thickness (± power)</h3>
+                <p>Estimate edge and centre thickness for plus and minus powered lenses.</p>
+                <span class="calc-card__cta">Open <svg viewBox="0 0 12 12"><polyline points="4,2 8,6 4,10"/></svg></span>
+              </div>
+            </a>
+
+            <!-- 4. Cylinder Conversion -->
+            <a class="calc-card" href="calculators/cylinder-conversion.html">
+              <div class="calc-card__illus">
+                <svg viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="80" cy="60" r="44" stroke="#3a3a3a" stroke-width="1.2"/>
+                  <line x1="38" y1="60" x2="122" y2="60" stroke="#3a3a3a" stroke-width="0.9"/>
+                  <line x1="80" y1="18" x2="80" y2="102" stroke="#3a3a3a" stroke-width="0.9"/>
+                  <line x1="48" y1="26" x2="112" y2="94" stroke="#3a3a3a" stroke-width="1"/>
+                  <text x="50" y="52" font-size="15" fill="#3a3a3a" font-family="DM Sans, sans-serif" font-weight="300">+</text>
+                  <text x="95" y="83" font-size="15" fill="#3a3a3a" font-family="DM Sans, sans-serif" font-weight="300">−</text>
+                  <path d="M 112,36 A 40,40 0 0,1 124,60" stroke="#3a3a3a" stroke-width="1" fill="none"/>
+                  <polyline points="110,44 112,36 119,40" stroke="#3a3a3a" stroke-width="1" fill="none"/>
+                </svg>
+              </div>
+              <div class="calc-card__body">
+                <h3>+ / − Cylinder Conversion</h3>
+                <p>Transpose prescriptions between positive and negative cylinder form.</p>
+                <span class="calc-card__cta">Open <svg viewBox="0 0 12 12"><polyline points="4,2 8,6 4,10"/></svg></span>
+              </div>
+            </a>
+
+            <!-- 5. Vertex Distance -->
+            <a class="calc-card" href="calculators/vertex-distance.html">
+              <div class="calc-card__illus">
+                <svg viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="54" cy="62" r="28" stroke="#3a3a3a" stroke-width="1.2"/>
+                  <line x1="92" y1="22" x2="92" y2="102" stroke="#3a3a3a" stroke-width="1.2" stroke-dasharray="3 3"/>
+                  <line x1="54" y1="62" x2="130" y2="62" stroke="#3a3a3a" stroke-width="1"/>
+                  <polyline points="126,58 130,62 126,66" stroke="#3a3a3a" stroke-width="1" fill="none"/>
+                  <text x="97" y="57" font-size="10" fill="#5f776c" font-family="DM Sans, sans-serif" font-weight="600">VD</text>
+                  <text x="48" y="67" font-size="11" fill="#3a3a3a" font-family="DM Sans, sans-serif">+</text>
+                </svg>
+              </div>
+              <div class="calc-card__body">
+                <h3>Vertex Distance Compensation</h3>
+                <p>Adjust lens power for changes in vertex distance from trial frame to spectacle.</p>
+                <span class="calc-card__cta">Open <svg viewBox="0 0 12 12"><polyline points="4,2 8,6 4,10"/></svg></span>
+              </div>
+            </a>
+
+            <!-- 6. Oblique Cylinder -->
+            <a class="calc-card" href="calculators/oblique-cylinder.html">
+              <div class="calc-card__illus">
+                <svg viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="80" cy="62" r="44" stroke="#3a3a3a" stroke-width="1.2"/>
+                  <line x1="44" y1="96" x2="116" y2="28" stroke="#3a3a3a" stroke-width="1" stroke-dasharray="4 3"/>
+                  <line x1="42" y1="40" x2="118" y2="84" stroke="#3a3a3a" stroke-width="1"/>
+                  <path d="M 80,20 A 42,42 0 0,1 118,55" stroke="#3a3a3a" stroke-width="1" fill="none"/>
+                  <polyline points="113,48 118,55 110,56" stroke="#3a3a3a" stroke-width="1" fill="none"/>
+                  <text x="86" y="36" font-size="9" fill="#5f776c" font-family="DM Sans, sans-serif">θ</text>
+                </svg>
+              </div>
+              <div class="calc-card__body">
+                <h3>Oblique Cylinder Effect</h3>
+                <p>Calculate the resultant power when two cylinders are combined at oblique axes.</p>
+                <span class="calc-card__cta">Open <svg viewBox="0 0 12 12"><polyline points="4,2 8,6 4,10"/></svg></span>
+              </div>
+            </a>
+
+          </div><!-- /carousel-track -->
+        </div><!-- /carousel-track-outer -->
+
+        <button class="carousel-btn carousel-btn--next" id="next-btn" aria-label="Next">
+          <svg viewBox="0 0 16 16"><polyline points="6,4 10,8 6,12"/></svg>
+        </button>
+      </div><!-- /carousel-wrap -->
+      <div class="carousel-dots" id="carousel-dots"></div>
+    </section>
+
+    <!-- Quick Reference -->
+    <section class="qref-section">
+      <div class="section-label">Quick Reference</div>
+      <div class="qref-grid">
+
+        <!-- Fitting Measurements -->
+        <div class="qref-card">
+          <div class="qref-card__head">
+            <h4>Standard Fitting Measurements</h4>
+            <p>Dispensing norms &amp; tolerances</p>
+          </div>
+          <div class="qref-card__body">
+            <div class="qref-row"><span class="qref-row__label">Pantoscopic tilt</span><span class="qref-row__val">8–12°</span></div>
+            <div class="qref-row"><span class="qref-row__label">Back vertex distance</span><span class="qref-row__val">12–14 mm</span></div>
+            <div class="qref-row"><span class="qref-row__label">Face form / wrap angle</span><span class="qref-row__val">0–5°</span></div>
+            <div class="qref-row"><span class="qref-row__label">Monocular PD tolerance</span><span class="qref-row__val">± 1.0 mm</span></div>
+            <p class="qref-note">Measure with frame fully adjusted and in its final position on the patient's face.</p>
+          </div>
+        </div>
+
+        <!-- Progressive Engravings -->
+        <div class="qref-card">
+          <div class="qref-card__head">
+            <h4>Progressive Lens Engravings</h4>
+            <p>Reading the permanent markings</p>
+          </div>
+          <div class="qref-card__body">
+            <div class="lens-diagram">
+              <svg viewBox="0 0 400 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="30" y="10" width="340" height="220" rx="72" ry="60" stroke="#3a3a3a" stroke-width="1.5" fill="white"/>
+                <line x1="200" y1="44" x2="200" y2="64" stroke="#5f776c" stroke-width="1.4"/>
+                <line x1="188" y1="54" x2="212" y2="54" stroke="#5f776c" stroke-width="1.4"/>
+                <line x1="213" y1="47" x2="248" y2="30" stroke="#5f776c" stroke-width="0.8" stroke-dasharray="2 2"/>
+                <text x="250" y="33" font-size="9" fill="#5f776c" font-family="DM Sans, sans-serif" font-weight="600">Fitting cross</text>
+                <ellipse cx="200" cy="54" rx="54" ry="24" stroke="#3a3a3a" stroke-width="0.8" stroke-dasharray="3 2"/>
+                <text x="200" y="40" font-size="8" fill="#4a5450" font-family="DM Sans, sans-serif" text-anchor="middle">Distance zone</text>
+                <ellipse cx="200" cy="200" rx="40" ry="18" stroke="#3a3a3a" stroke-width="0.8" stroke-dasharray="3 2"/>
+                <text x="200" y="204" font-size="8" fill="#4a5450" font-family="DM Sans, sans-serif" text-anchor="middle">Near zone</text>
+                <circle cx="128" cy="105" r="5" stroke="#3a3a3a" stroke-width="1" fill="none"/>
+                <circle cx="272" cy="105" r="5" stroke="#3a3a3a" stroke-width="1" fill="none"/>
+                <line x1="60" y1="105" x2="340" y2="105" stroke="#3a3a3a" stroke-width="0.6" stroke-dasharray="3 3"/>
+                <line x1="123" y1="105" x2="84" y2="90" stroke="#3a3a3a" stroke-width="0.7" stroke-dasharray="2 2"/>
+                <text x="34" y="87" font-size="8" fill="#4a5450" font-family="DM Sans, sans-serif">Hidden ref marks</text>
+                <line x1="200" y1="80" x2="200" y2="182" stroke="#3a3a3a" stroke-width="0.9" stroke-dasharray="2 2"/>
+                <polyline points="197,85 200,80 203,85" stroke="#3a3a3a" stroke-width="0.9" fill="none"/>
+                <polyline points="197,177 200,182 203,177" stroke="#3a3a3a" stroke-width="0.9" fill="none"/>
+                <line x1="202" y1="142" x2="232" y2="132" stroke="#3a3a3a" stroke-width="0.7" stroke-dasharray="2 2"/>
+                <text x="234" y="135" font-size="8.5" fill="#4a5450" font-family="DM Sans, sans-serif">Corridor</text>
+                <text x="68" y="132" font-size="10.5" fill="#1a2e26" font-family="DM Sans, sans-serif" font-weight="700">+2.50</text>
+                <line x1="100" y1="124" x2="123" y2="110" stroke="#1a2e26" stroke-width="0.8"/>
+                <line x1="72" y1="122" x2="66" y2="109" stroke="#5f776c" stroke-width="0.7" stroke-dasharray="2 2"/>
+                <text x="34" y="107" font-size="8" fill="#5f776c" font-family="DM Sans, sans-serif" font-weight="600">Add power (below ref)</text>
+                <text x="282" y="132" font-size="10.5" fill="#1a2e26" font-family="DM Sans, sans-serif" font-weight="700">14</text>
+                <line x1="288" y1="124" x2="277" y2="110" stroke="#1a2e26" stroke-width="0.8"/>
+                <line x1="296" y1="122" x2="303" y2="109" stroke="#5f776c" stroke-width="0.7" stroke-dasharray="2 2"/>
+                <text x="305" y="107" font-size="8" fill="#5f776c" font-family="DM Sans, sans-serif" font-weight="600">Corridor mm (below ref)</text>
+                <text x="282" y="150" font-size="9.5" fill="#4a5450" font-family="DM Sans, sans-serif" font-style="italic">VX</text>
+                <line x1="294" y1="147" x2="306" y2="152" stroke="#4a5450" stroke-width="0.6" stroke-dasharray="2 2"/>
+                <text x="308" y="155" font-size="8" fill="#4a5450" font-family="DM Sans, sans-serif">Mfr code</text>
+                <text x="68" y="234" font-size="7.5" fill="#9aaba5" font-family="DM Sans, sans-serif" text-anchor="middle">◀ Temporal</text>
+                <text x="332" y="234" font-size="7.5" fill="#9aaba5" font-family="DM Sans, sans-serif" text-anchor="middle">Nasal ▶</text>
+              </svg>
+            </div>
+            <p class="qref-note">Fitting heights are normally anywhere from 0–6 mm above the reference point. Add power and lens etching both sit below the reference marks. Use a lensometer or pen marker to re-locate if temporary markings are removed.</p>
+          </div>
+        </div>
+
+        <!-- Refractive Index -->
+        <div class="qref-card">
+          <div class="qref-card__head">
+            <h4>Refractive Index Guide</h4>
+            <p>Material reference by index</p>
+          </div>
+          <div class="qref-card__body">
+            <div class="qref-row"><span class="qref-row__label">1.50 — CR-39</span><span class="qref-row__val">Standard</span></div>
+            <div class="qref-row"><span class="qref-row__label">1.53 — Trivex</span><span class="qref-row__val">Impact resistant</span></div>
+            <div class="qref-row"><span class="qref-row__label">1.60 — MR-8</span><span class="qref-row__val">Mid-index</span></div>
+            <div class="qref-row"><span class="qref-row__label">1.67 — MR-10</span><span class="qref-row__val">High-index</span></div>
+            <div class="qref-row"><span class="qref-row__label">1.74 — MR-174</span><span class="qref-row__val">Ultra-thin</span></div>
+            <p class="qref-note">Higher index = thinner &amp; lighter but lower Abbe value. Trivex has the highest Abbe (45) of any mid/high-index material.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Database strip -->
+    <section class="db-section">
+      <div class="section-label">Lens Database</div>
+      <div class="db-strip">
+        <div class="db-strip__stats">
+          <div class="db-stat">
+            <span class="db-stat__num" id="stat-lenses">—</span>
+            <span class="db-stat__label">Lenses</span>
+          </div>
+          <div class="db-strip__divider"></div>
+          <div class="db-stat">
+            <span class="db-stat__num" id="stat-suppliers">—</span>
+            <span class="db-stat__label">Suppliers</span>
+          </div>
+          <div class="db-strip__divider"></div>
+          <div class="db-stat">
+            <span class="db-stat__num" id="stat-indexes">—</span>
+            <span class="db-stat__label">Index options</span>
+          </div>
+          <div class="db-strip__divider"></div>
+          <span class="db-strip__updated" id="stat-updated">Loading…</span>
+        </div>
+        <div class="db-strip__right">
+          <div class="db-strip__search">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+            <input type="text" id="db-search-input" placeholder="Search lenses…" />
+          </div>
+          <a class="db-strip__btn" href="/lenses">Browse all →</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <div id="odb-footer"></div>
+
+  <script>
+    /* ── Carousel ── */
+    const track   = document.getElementById('carousel-track');
+    const cards   = track.querySelectorAll('.calc-card');
+    const dotsEl  = document.getElementById('carousel-dots');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const total   = cards.length;
+    const visible = 3;
+    const maxPos  = total - visible;
+    let pos = 0;
+
+    // Build dots
+    for (let i = 0; i <= maxPos; i++) {
+      const d = document.createElement('button');
+      d.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+      d.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+      d.addEventListener('click', () => goTo(i));
+      dotsEl.appendChild(d);
+    }
+
+    function goTo(n) {
+      pos = Math.max(0, Math.min(n, maxPos));
+      const gap   = 16;
+      const cardW = cards[0].offsetWidth + gap;
+      track.style.transform = `translateX(-${pos * cardW}px)`;
+      dotsEl.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('active', i === pos));
+      prevBtn.disabled = pos === 0;
+      nextBtn.disabled = pos >= maxPos;
+    }
+
+    prevBtn.addEventListener('click', () => goTo(pos - 1));
+    nextBtn.addEventListener('click', () => goTo(pos + 1));
+
+    // Keyboard navigation
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowLeft') goTo(pos - 1);
+      if (e.key === 'ArrowRight') goTo(pos + 1);
+    });
+
+    /* ── DB stats — pull from API ── */
+    fetch('/api/lenses')
+      .then(r => r.json())
+      .then(data => {
+        const lenses    = data.length;
+        const suppliers = new Set(data.map(l => l.company).filter(Boolean)).size;
+        const indexes   = new Set(
+          data.flatMap(l => l.index ? l.index.split(',').map(i => i.trim()) : [])
+        ).size;
+
+        document.getElementById('stat-lenses').textContent    = lenses;
+        document.getElementById('stat-suppliers').textContent = suppliers;
+        document.getElementById('stat-indexes').textContent   = indexes;
+
+        // Last updated — use today's date as fallback
+        const now = new Date();
+        document.getElementById('stat-updated').textContent =
+          'Updated ' + now.toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' });
+      })
+      .catch(() => {
+        document.getElementById('stat-lenses').textContent    = '—';
+        document.getElementById('stat-suppliers').textContent = '—';
+        document.getElementById('stat-indexes').textContent   = '—';
+        document.getElementById('stat-updated').textContent   = '';
+      });
+
+    /* ── DB search — redirect to lenses.html with query ── */
+    const dbInput = document.getElementById('db-search-input');
+
+    dbInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const q = dbInput.value.trim();
+        if (q) window.location.href = `/lenses?search=${encodeURIComponent(q)}`;
+        else   window.location.href = '/lenses';
+      }
+    });
+  </script>
+  <script src="js/components.js"></script>
+
+</body>
+</html>

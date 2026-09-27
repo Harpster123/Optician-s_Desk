@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Log in • Optician's Desk</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <style>
+    :root {
+      --forest: #1a2e26;
+      --pine:   #2f4a3e;
+      --sage:   #5f776c;
+      --mist:   #e8eeeb;
+      --ink:    #1a1f1c;
+      --ink-2:  #4a5450;
+      --bg:     #f0f3f1;
+      --card:   #ffffff;
+      --radius: 14px;
+      --error:  #c0392b;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse 70% 60% at 15% 0%, rgba(47,74,62,0.10) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 50% at 85% 100%, rgba(95,119,108,0.07) 0%, transparent 55%);
+      color: var(--ink);
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    .auth-header {
+      background: var(--forest);
+      padding: 0 32px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.18);
+    }
+
+    .auth-brand {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 1.15rem;
+      color: #fff;
+      text-decoration: none;
+      letter-spacing: 0.01em;
+    }
+
+    .auth-brand span {
+      color: rgba(255,255,255,0.4);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 400;
+      margin-left: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* ── Main layout ── */
+    .auth-main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+    }
+
+    .auth-wrap {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    /* ── Card ── */
+    .auth-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid rgba(0,0,0,0.06);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+      padding: 40px;
+      animation: fadeUp 0.3s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .auth-card__eyebrow {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--sage);
+      margin-bottom: 6px;
+    }
+
+    .auth-card h1 {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 1.75rem;
+      color: var(--forest);
+      margin: 0 0 28px;
+      line-height: 1.2;
+    }
+
+    /* ── Fields ── */
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--ink-2);
+    }
+
+    .field input {
+      padding: 11px 14px;
+      border-radius: 10px;
+      border: 1.5px solid rgba(0,0,0,0.10);
+      background: #f8faf9;
+      font-size: 0.97rem;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      width: 100%;
+    }
+
+    .field input:focus {
+      border-color: var(--sage);
+      box-shadow: 0 0 0 3px rgba(95,119,108,0.12);
+      background: #fff;
+    }
+
+    .field input.error {
+      border-color: var(--error);
+      box-shadow: 0 0 0 3px rgba(192,57,43,0.10);
+    }
+
+    /* ── Forgot password link ── */
+    .forgot-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: -8px;
+      margin-bottom: 16px;
+    }
+
+    .forgot-link {
+      font-size: 0.8rem;
+      color: var(--sage);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .forgot-link:hover { color: var(--pine); }
+
+    /* ── Error message ── */
+    .auth-error {
+      background: #fdf2f2;
+      border: 1px solid rgba(192,57,43,0.2);
+      border-radius: 10px;
+      padding: 11px 14px;
+      font-size: 0.85rem;
+      color: var(--error);
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .auth-error.visible { display: block; }
+
+    /* ── Submit button ── */
+    .auth-btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      background: var(--forest);
+      color: #fff;
+      font-size: 0.95rem;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      margin-top: 4px;
+      position: relative;
+    }
+
+    .auth-btn:hover:not(:disabled) { background: var(--pine); }
+    .auth-btn:active:not(:disabled) { transform: scale(0.99); }
+    .auth-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .auth-btn__spinner {
+      display: none;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto;
+    }
+
+    .auth-btn.loading .auth-btn__text { display: none; }
+    .auth-btn.loading .auth-btn__spinner { display: block; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Footer link ── */
+    .auth-footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 0.85rem;
+      color: var(--ink-2);
+    }
+
+    .auth-footer a {
+      color: var(--pine);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .auth-footer a:hover { text-decoration: underline; }
+
+    /* ── Page footer ── */
+    .page-footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 0.78rem;
+      color: #9aaba5;
+    }
+
+    /* ── Dark mode ── */
+    body.dark {
+      background: #111916;
+      color: #d8e4df;
+    }
+
+    body.dark .auth-card {
+      background: #1c2620;
+      border-color: #263028;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+
+    body.dark .auth-card h1       { color: #c8ddd6; }
+    body.dark .auth-card__eyebrow { color: #5f776c; }
+
+    body.dark .field label { color: #7a9488; }
+
+    body.dark .field input {
+      background: #222e28;
+      border-color: #2e3c36;
+      color: #d8e4df;
+    }
+
+    body.dark .field input:focus {
+      border-color: var(--sage);
+      background: #263028;
+    }
+
+    body.dark .auth-footer { color: #7a9488; }
+    body.dark .forgot-link { color: #5f776c; }
+    body.dark .page-footer  { color: #3d5248; }
+
+    @media (max-width: 480px) {
+      .auth-card { padding: 28px 24px; }
+      .auth-header { padding: 0 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="auth-header">
+    <a class="auth-brand" href="/">Optician's Desk <span>NZ</span></a>
+  </header>
+
+  <main class="auth-main">
+    <div class="auth-wrap">
+
+      <div class="auth-card">
+        <div class="auth-card__eyebrow">Welcome back</div>
+        <h1>Log in</h1>
+
+        <div class="auth-error" id="authError"></div>
+
+        <div class="field">
+          <label for="email">Email address</label>
+          <input type="email" id="email" name="email" autocomplete="email" placeholder="you@example.com" required />
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" autocomplete="current-password" placeholder="••••••••" required />
+        </div>
+
+        <div class="forgot-row">
+          <a class="forgot-link" href="/forgot-password">Forgot password?</a>
+        </div>
+
+        <button class="auth-btn" id="submitBtn" type="button">
+          <span class="auth-btn__text">Log in</span>
+          <span class="auth-btn__spinner"></span>
+        </button>
+      </div>
+
+      <div class="auth-footer">
+        Don't have an account? <a href="/register">Sign up free</a>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="page-footer">
+    Optician's Desk — built for NZ optical dispensing
+  </footer>
+
+  <script>
+    // Apply saved dark mode
+    if (localStorage.getItem('theme') === 'dark') {
+      document.body.classList.add('dark');
+    }
+
+    // Read redirect param from URL
+    const params   = new URLSearchParams(window.location.search);
+    // Only follow redirects to pages on this site
+    const rawRedirect = params.get('redirect') || '';
+    const redirect = (rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') && !rawRedirect.startsWith('/\\'))
+      ? rawRedirect
+      : '/lenses';
+
+    const emailEl  = document.getElementById('email');
+    const passEl   = document.getElementById('password');
+    const errorEl  = document.getElementById('authError');
+    const submitBtn = document.getElementById('submitBtn');
+
+    function showError(msg) {
+      errorEl.textContent = msg;
+      errorEl.classList.add('visible');
+    }
+
+    function clearError() {
+      errorEl.classList.remove('visible');
+    }
+
+    function setLoading(on) {
+      submitBtn.disabled = on;
+      submitBtn.classList.toggle('loading', on);
+    }
+
+    async function doLogin() {
+      clearError();
+      const email    = emailEl.value.trim();
+      const password = passEl.value;
+
+      if (!email || !password) {
+        showError('Please enter your email and password.');
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        const res = await fetch('/auth/login', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          showError(data.error || 'Login failed. Please try again.');
+          setLoading(false);
+          return;
+        }
+
+        // Success — go to intended destination
+        window.location.href = redirect;
+
+      } catch {
+        showError('Network error. Please check your connection and try again.');
+        setLoading(false);
+      }
+    }
+
+    submitBtn.addEventListener('click', doLogin);
+
+    // Allow Enter key on either field
+    [emailEl, passEl].forEach(el => {
+      el.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+    });
+  </script>
+
+</body>
+</html>

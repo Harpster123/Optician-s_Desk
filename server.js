@@ -30,10 +30,21 @@ const upload = multer({
 });
 
 // ── Static files ─────────────────────────────────────────────
-// Block direct file access to admin HTML — it must go through Express
-app.use(express.static(path.join(__dirname), {
+// Only the public/ folder is served directly. Server code, protected
+// pages (views/) and config files are never reachable by URL.
+const PUBLIC_DIR = path.join(__dirname, "public");
+const VIEWS_DIR  = path.join(__dirname, "views");
+
+app.use(express.static(PUBLIC_DIR, {
   index: false  // disable auto-serving index.html so our route controls it
 }));
+
+// Only allow redirects to paths on this site (blocks /login?redirect=https://evil.com)
+function safeRedirect(target, fallback = "/lenses") {
+  if (typeof target !== "string") return fallback;
+  if (!target.startsWith("/") || target.startsWith("//") || target.startsWith("/\\")) return fallback;
+  return target;
+}
 
 // ── DB connection ─────────────────────────────────────────────
 const db = mysql.createPool({
@@ -180,7 +191,7 @@ function parseCSV(text) {
 // ═════════════════════════════════════════════════════════════
 
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
+  res.sendFile(path.join(PUBLIC_DIR, "index.html"));
 });
 
 // ── User auth pages ───────────────────────────────────────────
@@ -190,12 +201,12 @@ app.get("/login", (req, res) => {
   if (token) {
     try {
       jwt.verify(token, USER_JWT_SECRET);
-      const redirect = req.query.redirect || "/lenses";
+      const redirect = safeRedirect(req.query.redirect);
       return res.redirect(redirect);
     } catch {}
     res.clearCookie("userToken");
   }
-  res.sendFile(path.join(__dirname, "login.html"));
+  res.sendFile(path.join(PUBLIC_DIR, "login.html"));
 });
 
 app.get("/register", (req, res) => {
@@ -204,15 +215,15 @@ app.get("/register", (req, res) => {
     try { jwt.verify(token, USER_JWT_SECRET); return res.redirect("/lenses"); } catch {}
     res.clearCookie("userToken");
   }
-  res.sendFile(path.join(__dirname, "register.html"));
+  res.sendFile(path.join(PUBLIC_DIR, "register.html"));
 });
 
 app.get("/forgot-password", (req, res) => {
-  res.sendFile(path.join(__dirname, "forgot-password.html"));
+  res.sendFile(path.join(PUBLIC_DIR, "forgot-password.html"));
 });
 
 app.get("/reset-password", (req, res) => {
-  res.sendFile(path.join(__dirname, "reset-password.html"));
+  res.sendFile(path.join(PUBLIC_DIR, "reset-password.html"));
 });
 
 // ── User auth API ─────────────────────────────────────────────
@@ -393,7 +404,7 @@ app.post("/auth/reset-password", async (req, res) => {
 // ═════════════════════════════════════════════════════════════
 
 app.get("/lenses", requireUserAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, "lenses.html"));
+  res.sendFile(path.join(VIEWS_DIR, "lenses.html"));
 });
 
 app.get("/api/lenses", requireUserAuth, (req, res) => {
@@ -406,7 +417,7 @@ app.get("/api/lenses", requireUserAuth, (req, res) => {
 
 // ── Account page ──────────────────────────────────────────────
 app.get("/account", requireUserAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, "account.html"));
+  res.sendFile(path.join(VIEWS_DIR, "account.html"));
 });
 
 // GET current user details
@@ -504,7 +515,7 @@ app.get("/admin/login", (req, res) => {
       res.clearCookie("adminToken");
     }
   }
-  res.sendFile(path.join(__dirname, "admin", "login.html"));
+  res.sendFile(path.join(VIEWS_DIR, "admin", "login.html"));
 });
 
 // Handle admin login
@@ -574,7 +585,7 @@ app.patch("/api/admin/users/:id/toggle-admin", requireAuth, (req, res) => {
 
 // Admin panel
 app.get("/admin", requireAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, "admin", "index.html"));
+  res.sendFile(path.join(VIEWS_DIR, "admin", "index.html"));
 });
 
 // ── Admin API: Lenses CRUD ────────────────────────────────────
@@ -724,5 +735,5 @@ app.listen(PORT, () => {
 
 // ── 404 ───────────────────────────────────────────────────────
 app.use((req, res) => {
-  res.status(404).sendFile(path.join(__dirname, "404.html"));
+  res.status(404).sendFile(path.join(PUBLIC_DIR, "404.html"));
 });
