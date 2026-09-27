@@ -46,16 +46,16 @@ const db = mysql.createPool({
 });
 
 // Test connection on startup -Redploy when DB ready
-//db.getConnection((err, conn) => {
- // if (err) {
-//    console.error("Database connection failed:", err.message);
- //   process.exit(1);
-//  }
- // console.log("Connected to MySQL");
- // conn.release();
-//});
+db.getConnection((err, conn) => {
+  if (err) {
+    console.error("Database connection failed:", err.message);
+   process.exit(1);
+  }
+ console.log("Connected to MySQL");
+ conn.release();
+});
 
-console.error("Database connection failed — running without DB");
+//console.error("Database connection failed — running without DB");
 
 // ── JWT secrets ───────────────────────────────────────────────
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -82,10 +82,10 @@ function signUserToken(payload) {
 // Helper: fetch is_admin and sign a full user token
 async function signUserTokenFromDB(userId) {
   return new Promise((resolve, reject) => {
-    db.query("SELECT id, email, role, is_admin FROM users WHERE id = ?", [userId], (err, rows) => {
-      if (err || rows.length === 0) return reject(err || new Error("User not found"));
-      const u = rows[0];
-      resolve(signUserToken({ id: u.id, email: u.email, role: u.role, is_admin: !!u.is_admin }));
+    db.query("SELECT id, email, role, is_admin, is_paid FROM users WHERE id = ?", [userId], (err, rows) => {
+    if (err || rows.length === 0) return reject(err || new Error("User not found"));
+     const u = rows[0];
+     resolve(signUserToken({ id: u.id, email: u.email, role: u.role, is_admin: !!u.is_admin, is_paid: !!u.is_paid }));
     });
   });
 }
@@ -713,6 +713,10 @@ app.post("/api/admin/lenses/csv-import", requireAuth, (req, res) => {
 // ═════════════════════════════════════════════════════════════
 // START
 // ═════════════════════════════════════════════════════════════
+
+const agentRoutes = require("./src/agentRoutes");
+agentRoutes.db = db;
+app.use("/api/agent", agentRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

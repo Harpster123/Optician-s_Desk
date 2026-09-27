@@ -486,6 +486,234 @@
       body.dark .working-step__sub,
       body.dark .output-step__working,
       body.dark .step-card__working  { color: #5f776c; }
+
+      /* ── Agent Widget ── */
+      .odb-agent-fab {
+        position: fixed;
+        bottom: 28px;
+        right: 28px;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: #2f4a3e;
+        border: 1px solid rgba(255,255,255,0.12);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 999;
+        transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+      }
+      .odb-agent-fab:hover {
+        background: #3a5c4e;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 28px rgba(0,0,0,0.4);
+      }
+      .odb-agent-fab svg { width: 22px; height: 22px; }
+
+      .odb-agent-widget {
+        position: fixed;
+        bottom: 90px;
+        right: 28px;
+        width: 360px;
+        max-height: 560px;
+        background: #1a2e26;
+        border: 1px solid rgba(255,255,255,0.09);
+        border-radius: 16px;
+        box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+        display: flex;
+        flex-direction: column;
+        z-index: 998;
+        overflow: hidden;
+        opacity: 0;
+        transform: translateY(12px) scale(0.97);
+        pointer-events: none;
+        transition: opacity 0.18s ease, transform 0.18s ease;
+        font-family: 'DM Sans', sans-serif;
+      }
+      .odb-agent-widget.open {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        pointer-events: all;
+      }
+      @media (max-width: 420px) {
+        .odb-agent-widget {
+          width: calc(100vw - 24px);
+          right: 12px;
+          bottom: 84px;
+        }
+        .odb-agent-fab { bottom: 20px; right: 16px; }
+      }
+
+      .odb-agent-header {
+        padding: 14px 16px 12px;
+        border-bottom: 1px solid rgba(255,255,255,0.07);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+      }
+      .odb-agent-header__title {
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: #7a9488;
+      }
+      .odb-agent-header__sub {
+        font-size: 0.72rem;
+        color: #3d5248;
+        margin-top: 1px;
+      }
+      .odb-agent-header__close {
+        background: transparent;
+        border: none;
+        color: #3d5248;
+        cursor: pointer;
+        padding: 4px;
+        line-height: 1;
+        font-size: 1.1rem;
+        transition: color 0.1s;
+      }
+      .odb-agent-header__close:hover { color: #7a9488; }
+
+      .odb-agent-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 14px 14px 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        scrollbar-width: thin;
+        scrollbar-color: #2f4a3e transparent;
+      }
+
+      .odb-agent-msg {
+        max-width: 88%;
+        font-size: 0.83rem;
+        line-height: 1.55;
+        padding: 9px 12px;
+        border-radius: 10px;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .odb-agent-msg.user {
+        align-self: flex-end;
+        background: #2f4a3e;
+        color: #c8ddd6;
+        border-bottom-right-radius: 3px;
+      }
+      .odb-agent-msg.agent {
+        align-self: flex-start;
+        background: #1c2e24;
+        border: 1px solid rgba(255,255,255,0.06);
+        color: #a8c4bc;
+        border-bottom-left-radius: 3px;
+      }
+      .odb-agent-msg.system {
+        align-self: center;
+        background: transparent;
+        color: #3d5248;
+        font-size: 0.75rem;
+        text-align: center;
+        padding: 4px 8px;
+      }
+
+      .odb-agent-typing {
+        align-self: flex-start;
+        display: flex;
+        gap: 4px;
+        padding: 10px 14px;
+        background: #1c2e24;
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 10px;
+        border-bottom-left-radius: 3px;
+      }
+      .odb-agent-typing span {
+        width: 6px; height: 6px;
+        background: #5f776c;
+        border-radius: 50%;
+        animation: odb-bounce 1.2s ease-in-out infinite;
+      }
+      .odb-agent-typing span:nth-child(2) { animation-delay: 0.2s; }
+      .odb-agent-typing span:nth-child(3) { animation-delay: 0.4s; }
+      @keyframes odb-bounce {
+        0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+        40%            { transform: translateY(-5px); opacity: 1; }
+      }
+
+      .odb-agent-footer {
+        padding: 10px 12px 12px;
+        border-top: 1px solid rgba(255,255,255,0.06);
+        display: flex;
+        gap: 8px;
+        align-items: flex-end;
+        flex-shrink: 0;
+      }
+      .odb-agent-input {
+        flex: 1;
+        background: #111916;
+        border: 1px solid #263028;
+        border-radius: 10px;
+        padding: 9px 12px;
+        font-size: 0.84rem;
+        font-family: 'DM Sans', sans-serif;
+        color: #c8ddd6;
+        resize: none;
+        outline: none;
+        line-height: 1.45;
+        max-height: 100px;
+        overflow-y: auto;
+        transition: border-color 0.15s;
+      }
+      .odb-agent-input::placeholder { color: #3d5248; }
+      .odb-agent-input:focus { border-color: #5f776c; }
+
+      .odb-agent-send {
+        background: #2f4a3e;
+        border: none;
+        border-radius: 10px;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: background 0.15s;
+      }
+      .odb-agent-send:hover { background: #3a5c4e; }
+      .odb-agent-send:disabled { opacity: 0.4; cursor: not-allowed; }
+      .odb-agent-send svg { width: 16px; height: 16px; }
+
+      .odb-agent-gate {
+        padding: 24px 18px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
+      .odb-agent-gate p {
+        font-size: 0.82rem;
+        color: #5f776c;
+        line-height: 1.55;
+        margin: 0;
+      }
+      .odb-agent-gate a {
+        display: inline-block;
+        margin-top: 4px;
+        padding: 8px 20px;
+        background: #2f4a3e;
+        color: #c8ddd6;
+        border-radius: 8px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background 0.15s;
+      }
+      .odb-agent-gate a:hover { background: #3a5c4e; }
     `;
     document.head.appendChild(style);
 
@@ -688,6 +916,58 @@
     const footerEl = document.getElementById('odb-footer');
     if (footerEl) footerEl.outerHTML = footerHTML;
 
+    /* ── Inject agent widget ── */
+    const agentFAB = `
+      <button class="odb-agent-fab" id="odb-agent-fab" onclick="ODB.agentToggle()" aria-label="Open dispensing assistant">
+        <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <ellipse cx="12" cy="12" rx="10" ry="6"/>
+          <circle cx="12" cy="12" r="2.5" fill="rgba(255,255,255,0.75)" stroke="none"/>
+        </svg>
+      </button>
+      <div class="odb-agent-widget" id="odb-agent-widget" role="dialog" aria-label="Dispensing assistant">
+        <div class="odb-agent-header">
+          <div>
+            <div class="odb-agent-header__title">Dispensing Assistant</div>
+            <div class="odb-agent-header__sub">Members only &middot; Clinical queries only</div>
+          </div>
+          <button class="odb-agent-header__close" onclick="ODB.agentClose()" aria-label="Close">&times;</button>
+        </div>
+        <div class="odb-agent-messages" id="odb-agent-messages"></div>
+        <div class="odb-agent-footer" id="odb-agent-footer">
+          <textarea
+            class="odb-agent-input"
+            id="odb-agent-input"
+            placeholder="Ask a dispensing question…"
+            rows="1"
+            onkeydown="ODB.agentKeydown(event)"
+            oninput="ODB.agentInputResize(this)"
+          ></textarea>
+          <button class="odb-agent-send" id="odb-agent-send" onclick="ODB.agentSend()" aria-label="Send">
+            <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2" fill="rgba(255,255,255,0.8)" stroke="none"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', agentFAB);
+
+    /* ── Close widget on outside click ── */
+    document.addEventListener('click', (e) => {
+      if (!ODB._agentOpen) return;
+      const widget = document.getElementById('odb-agent-widget');
+      const fab    = document.getElementById('odb-agent-fab');
+      if (widget && !widget.contains(e.target) && fab && !fab.contains(e.target)) {
+        ODB.agentClose();
+      }
+    });
+
+    /* ── Close widget on Escape ── */
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && ODB._agentOpen) ODB.agentClose();
+    });
+
     /* ── Apply saved dark mode ── */
     if (localStorage.getItem('theme') === 'dark') {
       document.body.classList.add('dark');
@@ -774,6 +1054,170 @@
       fetch('/auth/logout', { method: 'POST' })
         .then(() => { window.location.href = '/login'; })
         .catch(() => { window.location.href = '/login'; });
+    },
+
+    // ── Agent widget ────────────────────────────────────────────
+    _agentOpen: false,
+    _agentMessages: [],   // { role: 'user'|'assistant', content: string }
+    _agentBusy: false,
+
+agentToggle() {
+  const widget = document.getElementById('odb-agent-widget');
+  if (!widget) return;
+  this._agentOpen = !this._agentOpen;
+  widget.classList.toggle('open', this._agentOpen);
+  if (this._agentOpen) {
+    if (this._agentMessages.length === 0) {
+      fetch('/api/agent/ping', { credentials: 'include' })
+        .then(res => {
+          if (res.status === 401) {
+            this._agentShowGate('Please log in to use the dispensing assistant.');
+          } else if (res.status === 403) {
+            const messages = document.getElementById('odb-agent-messages');
+            const footer   = document.getElementById('odb-agent-footer');
+            if (messages) messages.innerHTML = `
+              <div class="odb-agent-gate">
+                <p>The dispensing assistant is available to members.<br>Upgrade to access AI-powered lens recommendations and clinical guidance.</p>
+                <a href="/account">View membership options</a>
+              </div>`;
+            if (footer) footer.style.display = 'none';
+          } else {
+            this._agentWelcome();
+          }
+        })
+        .catch(() => { this._agentWelcome(); });
+    }
+    setTimeout(() => {
+      const input = document.getElementById('odb-agent-input');
+      if (input) input.focus();
+    }, 180);
+  }
+},
+
+    agentClose() {
+      this._agentOpen = false;
+      const widget = document.getElementById('odb-agent-widget');
+      if (widget) widget.classList.remove('open');
+    },
+
+  _agentWelcome() {
+    const welcome = 'Hi — ask me anything dispensing-related.\n\nI can help with Rx queries, lens recommendations, calculator guidance, and health condition flags.';
+    this._agentMessages.push({ role: 'assistant', content: welcome });
+    this._agentRenderMsg('agent', welcome);
+  },
+
+
+    _agentRenderMsg(role, text) {
+      const list = document.getElementById('odb-agent-messages');
+      if (!list) return;
+      const div = document.createElement('div');
+      div.className = 'odb-agent-msg ' + role;
+      div.textContent = text;
+      list.appendChild(div);
+      list.scrollTop = list.scrollHeight;
+    },
+
+    _agentShowTyping() {
+      const list = document.getElementById('odb-agent-messages');
+      if (!list) return;
+      const el = document.createElement('div');
+      el.className = 'odb-agent-typing';
+      el.id = 'odb-agent-typing';
+      el.innerHTML = '<span></span><span></span><span></span>';
+      list.appendChild(el);
+      list.scrollTop = list.scrollHeight;
+    },
+
+    _agentHideTyping() {
+      const el = document.getElementById('odb-agent-typing');
+      if (el) el.remove();
+    },
+
+    _agentShowGate(msg) {
+      const messages = document.getElementById('odb-agent-messages');
+      const footer   = document.getElementById('odb-agent-footer');
+      if (messages) messages.innerHTML = `
+        <div class="odb-agent-gate">
+          <p>${msg}</p>
+          <a href="/login?redirect=${encodeURIComponent(window.location.pathname)}">Log in</a>
+        </div>`;
+      if (footer) footer.style.display = 'none';
+    },
+
+    async agentSend() {
+      if (this._agentBusy) return;
+      const input = document.getElementById('odb-agent-input');
+      const send  = document.getElementById('odb-agent-send');
+      if (!input) return;
+
+      const text = input.value.trim();
+      if (!text) return;
+
+      input.value = '';
+      input.style.height = 'auto';
+      this._agentBusy = true;
+      if (send) send.disabled = true;
+
+      // Add to local history and render
+      this._agentMessages.push({ role: 'user', content: text });
+      this._agentRenderMsg('user', text);
+      this._agentShowTyping();
+
+      try {
+        const res = await fetch('/api/agent/chat', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ messages: this._agentMessages })
+        });
+
+        this._agentHideTyping();
+
+        if (res.status === 401) {
+          this._agentShowGate('Please log in to use the dispensing assistant.');
+          return;
+        }
+        if (res.status === 403) {
+          const messages = document.getElementById('odb-agent-messages');
+          const footer   = document.getElementById('odb-agent-footer');
+          if (messages) messages.innerHTML = `
+            <div class="odb-agent-gate">
+              <p>The dispensing assistant is available to members.<br>Upgrade to access AI-powered lens recommendations, similarity matching, and clinical guidance.</p>
+              <a href="/account">View membership options</a>
+            </div>`;
+          if (footer) footer.style.display = 'none';
+          return;
+        }
+        if (!res.ok) {
+          this._agentRenderMsg('system', 'Something went wrong — please try again.');
+          return;
+        }
+
+        const data = await res.json();
+        const reply = data.reply || '';
+        this._agentMessages.push({ role: 'assistant', content: reply });
+        this._agentRenderMsg('agent', reply);
+
+      } catch (err) {
+        this._agentHideTyping();
+        this._agentRenderMsg('system', 'Connection error — check your network and try again.');
+      } finally {
+        this._agentBusy = false;
+        if (send) send.disabled = false;
+        if (input) input.focus();
+      }
+    },
+
+    agentKeydown(e) {
+      // Send on Enter, newline on Shift+Enter
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        this.agentSend();
+      }
+    },
+
+    agentInputResize(el) {
+      el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 100) + 'px';
     }
   };
 

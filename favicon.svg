@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 680">
+  <style>
+    .f { fill: none; stroke: #2f4a3e; stroke-width: 28; stroke-linecap: round; stroke-linejoin: round; }
+    .b { fill: none; stroke: #2f4a3e; stroke-width: 22; stroke-linecap: round; }
+    @media (prefers-color-scheme: dark) {
+      .f, .b { stroke: #7a9488; }
+    }
+  </style>
+  <circle class="f" cx="224" cy="340" r="148"/>
+  <circle class="f" cx="456" cy="340" r="148"/>
+  <path class="b" d="M372 330 Q340 310 308 330"/>
+  <path class="b" d="M76 280 Q48 268 36 260"/>
+  <path class="b" d="M604 280 Q632 268 644 260"/>
+</svg>
