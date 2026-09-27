@@ -125,22 +125,42 @@ STYLE:
 
 // ── Auth middleware ────────────────────────────────────────────
 
-function requirePaidUser(req, res, next) {
+// Checks membership in the database on every request (not the login token),
+// so switching a member on or off in admin takes effect immediately.
+async function requirePaidUser(req, res, next) {
   const token = req.cookies?.userToken;
   if (!token) return res.status(401).json({ error: "Login required" });
 
+  let decoded;
   try {
-    const decoded = jwt.verify(token, process.env.USER_JWT_SECRET);
-    // is_admin bypasses paid gate
-    if (!decoded.is_paid && !decoded.is_admin) {
-      return res.status(403).json({ error: "paid_required" });
-    }
-    req.user = decoded;
-    next();
+    decoded = jwt.verify(token, process.env.USER_JWT_SECRET);
   } catch {
     res.clearCookie("userToken");
     return res.status(401).json({ error: "Session expired" });
   }
+
+  let rows;
+  try {
+    rows = await new Promise((resolve, reject) =>
+      router.db.query("SELECT is_paid, is_admin FROM users WHERE id = ?", [decoded.id],
+        (err, r) => err ? reject(err) : resolve(r)));
+  } catch (err) {
+    console.error("Membership check failed:", err.message);
+    return res.status(500).json({ error: "Could not check membership — please try again" });
+  }
+
+  if (rows.length === 0) {
+    res.clearCookie("userToken");
+    return res.status(401).json({ error: "Session expired" });
+  }
+
+  // is_admin bypasses paid gate
+  if (!rows[0].is_paid && !rows[0].is_admin) {
+    return res.status(403).json({ error: "paid_required" });
+  }
+
+  req.user = { ...decoded, is_paid: !!rows[0].is_paid, is_admin: !!rows[0].is_admin };
+  next();
 }
 
 // ── Tag utilities ─────────────────────────────────────────────

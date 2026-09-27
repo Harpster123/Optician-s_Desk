@@ -1076,7 +1076,7 @@ agentToggle() {
             if (messages) messages.innerHTML = `
               <div class="odb-agent-gate">
                 <p>The dispensing assistant is available to members.<br>Upgrade to access AI-powered lens recommendations and clinical guidance.</p>
-                <a href="/account">View membership options</a>
+                <a href="/account#membership">View membership options</a>
               </div>`;
             if (footer) footer.style.display = 'none';
           } else {
@@ -1180,7 +1180,7 @@ agentToggle() {
           if (messages) messages.innerHTML = `
             <div class="odb-agent-gate">
               <p>The dispensing assistant is available to members.<br>Upgrade to access AI-powered lens recommendations, similarity matching, and clinical guidance.</p>
-              <a href="/account">View membership options</a>
+              <a href="/account#membership">View membership options</a>
             </div>`;
           if (footer) footer.style.display = 'none';
           return;

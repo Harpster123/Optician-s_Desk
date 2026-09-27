@@ -161,6 +161,19 @@
     }
 
     /* ── Danger zone ── */
+    #membership { scroll-margin-top: 110px; }  /* clear the sticky header */
+
+    .member-badge {
+      display: inline-block; padding: 4px 11px; border-radius: 999px;
+      font-size: 0.75rem; font-weight: 700; letter-spacing: 0.03em;
+    }
+    .member-badge--paid { background: #2e7d52; color: #fff; }
+    .member-badge--free { background: var(--mist); color: var(--pine); }
+    .member-text { font-size: 0.875rem; color: var(--ink-2); line-height: 1.55; margin: 12px 0 0; }
+    .member-text ul { margin: 8px 0 0; padding-left: 1.1rem; }
+    body.dark .member-text { color: #7a9488; }
+    body.dark .member-badge--free { background: #222e28; color: #a8c4bc; }
+
     .danger-zone {
       border-color: rgba(192,57,43,0.15);
     }
@@ -225,6 +238,12 @@
     <div class="account-card__title">Profile</div>
     <div class="skeleton" style="margin-bottom:12px"></div>
     <div class="skeleton" style="margin-bottom:12px"></div>
+    <div class="skeleton"></div>
+  </div>
+
+  <!-- ── Membership ── -->
+  <div class="account-card" id="membership">
+    <div class="account-card__title">Membership</div>
     <div class="skeleton"></div>
   </div>
 
@@ -322,6 +341,33 @@
           </button>
         </div>
       `;
+
+      // ── Membership card ──
+      const isMember = !!(user.is_paid || user.is_admin);
+      document.getElementById('membership').innerHTML = isMember ? `
+        <div class="account-card__title">Membership</div>
+        <span class="member-badge member-badge--paid">${user.is_admin && !user.is_paid ? 'Admin access' : 'Founding member'}</span>
+        <p class="member-text">You have full access, including the AI dispensing assistant. Thank you for supporting Optician's Desk.</p>
+      ` : `
+        <div class="account-card__title">Membership</div>
+        <span class="member-badge member-badge--free">Free account</span>
+        <div class="member-text">
+          Your free account includes the clinical calculators and the NZ lens database. Founding members also get:
+          <ul>
+            <li>The AI dispensing assistant — lens recommendations, similar-lens matching and clinical guidance</li>
+            <li>Founding-member pricing, locked in</li>
+          </ul>
+        </div>
+        <div class="btn-row">
+          <a class="btn btn--primary" style="text-decoration:none"
+             href="mailto:hello@opticiansdesk.co.nz?subject=${encodeURIComponent('Founding membership')}&body=${encodeURIComponent('Hi, I would like to become a founding member. My account email is ' + user.email + '.')}">
+            Become a founding member
+          </a>
+        </div>
+      `;
+      if (window.location.hash === '#membership') {
+        document.getElementById('membership').scrollIntoView({ behavior: 'smooth' });
+      }
 
       // ── Email card ──
       document.getElementById('emailCard').innerHTML = `

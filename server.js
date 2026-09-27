@@ -64,6 +64,13 @@ db.getConnection((err, conn) => {
   }
  console.log("Connected to MySQL");
  conn.release();
+
+ // Check the membership column exists — gives a clear message instead of vague "Database error"s
+ db.query("SHOW COLUMNS FROM users LIKE 'is_paid'", (err, rows) => {
+   if (!err && rows.length === 0) {
+     console.warn("WARNING: users.is_paid column is missing. Run scripts/add-is-paid.sql in MySQL.");
+   }
+ });
 });
 
 //console.error("Database connection failed — running without DB");
@@ -423,7 +430,7 @@ app.get("/account", requireUserAuth, (req, res) => {
 // GET current user details
 app.get("/api/account", requireUserAuth, (req, res) => {
   db.query(
-    "SELECT id, name, email, role, is_admin, created_at FROM users WHERE id = ?",
+    "SELECT id, name, email, role, is_admin, is_paid, created_at FROM users WHERE id = ?",
     [req.user.id],
     (err, rows) => {
       if (err) return res.status(500).json({ error: "Database error" });
@@ -559,7 +566,7 @@ app.post("/admin/logout", (req, res) => {
 
 app.get("/api/admin/users", requireAuth, (req, res) => {
   db.query(
-    "SELECT id, name, email, role, is_admin, created_at FROM users ORDER BY created_at DESC",
+    "SELECT id, name, email, role, is_admin, is_paid, created_at FROM users ORDER BY created_at DESC",
     (err, rows) => {
       if (err) return res.status(500).json({ error: "Database error" });
       res.json(rows);
@@ -579,6 +586,23 @@ app.patch("/api/admin/users/:id/toggle-admin", requireAuth, (req, res) => {
     db.query("UPDATE users SET is_admin = ? WHERE id = ?", [newValue, id], (err) => {
       if (err) return res.status(500).json({ error: "Failed to update user" });
       res.json({ ok: true, is_admin: !!newValue });
+    });
+  });
+});
+
+// Turn membership on/off for a user (manual billing for founding members)
+app.patch("/api/admin/users/:id/toggle-paid", requireAuth, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+
+  db.query("SELECT is_paid FROM users WHERE id = ?", [id], (err, rows) => {
+    if (err) return res.status(500).json({ error: "Database error" });
+    if (rows.length === 0) return res.status(404).json({ error: "User not found" });
+
+    const newValue = rows[0].is_paid ? 0 : 1;
+
+    db.query("UPDATE users SET is_paid = ? WHERE id = ?", [newValue, id], (err) => {
+      if (err) return res.status(500).json({ error: "Failed to update user" });
+      res.json({ ok: true, is_paid: !!newValue });
     });
   });
 });
