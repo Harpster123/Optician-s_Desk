@@ -9,8 +9,14 @@ const crypto   = require("crypto");
 
 require("dotenv").config();
 
+const { sendEmail, passwordResetEmail } = require("./src/email");
+
 const app  = express();
 const PORT = process.env.PORT || 3000;
+
+// The site's public address, used in links inside emails.
+// Set APP_URL in .env once the site is live, e.g. https://opticiansdesk.co.nz
+const APP_URL = (process.env.APP_URL || `http://localhost:${PORT}`).replace(/\/+$/, "");
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -350,22 +356,13 @@ app.post("/auth/forgot-password", (req, res) => {
       (err) => {
         if (err) return res.json(genericResponse);
 
-        const resetUrl = `https://opticiansdesk.com/reset-password?token=${token}`;
+        const resetUrl = `${APP_URL}/reset-password?token=${token}`;
+        const message  = passwordResetEmail({ name: user.name, resetUrl });
 
-        // TODO: wire up email when ready — npm install resend, add RESEND_API_KEY to .env
-        //
-        // const { Resend } = require('resend');
-        // const resend = new Resend(process.env.RESEND_API_KEY);
-        // await resend.emails.send({
-        //   from: 'noreply@opticiansdesk.com',
-        //   to: email,
-        //   subject: "Reset your Optician's Desk password",
-        //   html: `<p>Hi ${user.name},</p>
-        //          <p>Click below to reset your password. Link expires in 1 hour.</p>
-        //          <p><a href="${resetUrl}">${resetUrl}</a></p>`
-        // });
+        // Send in the background — the response is the same either way,
+        // so nobody can tell from it whether an email address is registered.
+        sendEmail({ to: email.toLowerCase().trim(), ...message });
 
-        console.log(`[DEV] Password reset link for ${email}: ${resetUrl}`);
         res.json(genericResponse);
       }
     );
