@@ -176,13 +176,15 @@ function requireAuth(req, res, next) {
     let decoded = null;
     try { decoded = jwt.verify(userToken, USER_JWT_SECRET); } catch {}
     if (decoded) {
-      return db.query("SELECT is_admin FROM users WHERE id = ?", [decoded.id], (err, rows) => {
+      // Note: don't `return db.query(...)` — Express 5 would treat the query object as a promise
+      db.query("SELECT is_admin FROM users WHERE id = ?", [decoded.id], (err, rows) => {
         if (!err && rows.length && rows[0].is_admin) {
           req.admin = { ...decoded, is_admin: true };
           return next();
         }
         return checkLegacyAdmin(req, res, next);
       });
+      return;
     }
   }
   return checkLegacyAdmin(req, res, next);
