@@ -65,7 +65,7 @@ const isText = (v, max = 200) => typeof v === "string" && v.trim().length > 0 &&
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // The site's public address, used in links inside emails.
-// Set APP_URL in .env once the site is live, e.g. https://opticiansdesk.co.nz
+// Set APP_URL in .env once the site is live, e.g. https://www.opticiansdesk.com
 const APP_URL = (process.env.APP_URL || `http://localhost:${PORT}`).replace(/\/+$/, "");
 
 app.use(express.json());

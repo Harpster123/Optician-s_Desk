@@ -4,7 +4,7 @@
 // Settings (in .env):
 //   RESEND_API_KEY  your Resend API key (starts with re_)
 //   EMAIL_FROM      who emails come from, e.g.
-//                   Optician's Desk <noreply@opticiansdesk.co.nz>
+//                   Optician's Desk <noreply@opticiansdesk.com>
 //                   (must be on a domain you've verified in Resend)
 //
 // If RESEND_API_KEY isn't set, emails are printed to the terminal

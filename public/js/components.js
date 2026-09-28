@@ -835,10 +835,13 @@
               </div>
               <div class="odb-footer__doc-section">
                 <h3>Third parties</h3>
-                <p>We use Stripe for payment processing and a third-party AI provider for AI-assisted features. Each operates under its own privacy policy. We do not sell your data.</p>
+                <p>We use Stripe for payment processing, a third-party AI provider for AI-assisted features, and Resend to send account emails such as password resets. Each operates under its own privacy policy. We do not sell your data.</p>
+                <br/>
+                <h3>Where your data is stored</h3>
+                <p>Your account data is stored with our hosting provider, Railway, on servers located in Singapore.</p>
                 <br/>
                 <h3>Your rights</h3>
-                <p>Under the Privacy Act 2020 you have the right to access and correct personal information we hold. Contact us at <a href="mailto:hello@opticiansdesk.co.nz">hello@opticiansdesk.co.nz</a> or the <a href="https://privacy.org.nz" target="_blank" rel="noopener">Office of the Privacy Commissioner</a> if you have a concern.</p>
+                <p>Under the Privacy Act 2020 you have the right to access and correct personal information we hold. Contact us at <a href="mailto:hello@opticiansdesk.com">hello@opticiansdesk.com</a> or the <a href="https://privacy.org.nz" target="_blank" rel="noopener">Office of the Privacy Commissioner</a> if you have a concern.</p>
               </div>
               <div class="odb-footer__doc-section">
                 <h3>Data retention</h3>
@@ -1026,7 +1029,7 @@
       if (!email.trim() || !msg.trim()) { alert('Please enter your email and a message.'); return; }
       const subject = encodeURIComponent('[Opticians Desk] ' + (type || 'Feedback'));
       const body = encodeURIComponent('Name: ' + (name || 'Not provided') + '\nType: ' + (type || '—') + '\nRating: ' + (this._rating || '—') + '/5\n\n' + msg.trim());
-      window.open('mailto:hello@opticiansdesk.co.nz?subject=' + subject + '&body=' + body);
+      window.open('mailto:hello@opticiansdesk.com?subject=' + subject + '&body=' + body);
       const form = document.getElementById('odb-feedback-form');
       const success = document.getElementById('odb-fb-success');
       if (form) form.style.display = 'none';
