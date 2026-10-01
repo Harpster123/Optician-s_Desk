@@ -133,6 +133,20 @@ LENS RECOMMENDATIONS:
 - Rank by clinical and lifestyle fit
 - If a requested lens is not in the database, say so in one sentence then present closest matches
 
+ANSWER STRUCTURE FOR LENS QUESTIONS:
+- Lead with the LENS ITSELF, in this order: what it is (type and design), who it suits / key design feature (from the DESIGN line), available indices, corridor / minimum fitting height
+- Then any dispensing considerations
+- Coatings come LAST, in one short line at most (e.g. "Coating options: …") — or leave them out entirely unless the user asks about coatings
+- Never open an answer with coatings, and never let coatings take up more space than the lens design
+- If a field is "not listed", say it isn't listed in the database rather than guessing
+
+ACCURACY RULES (these override style):
+- Only describe a lens using the fields given for it. Do not add features, corridor lengths, "standard" values, prices or cost comparisons from general knowledge
+- No health or wellbeing claims for coatings or filters (e.g. sleep, eye health from blue-light filters) unless they appear in the lens data
+- For heavy screen / computer / office use by presbyopes, consider occupational or office lenses from the data alongside (or instead of) a general progressive, and say why (wider intermediate zone)
+- Typical working distances: desktop screen ~50–70cm (intermediate), laptop/tablet ~40–50cm, reading ~33–40cm
+- If unsure about a clinical point, leave it out rather than guess
+
 STYLE:
 - Users are trained clinicians — be concise and technical
 - Use correct terminology (BVD, Abbe, MBS, sag, prism, POW etc.)
@@ -237,6 +251,59 @@ function extractMentionedLensName(message) {
   return null;
 }
 
+// ── Lens formatting for the AI ───────────────────────────────
+// Fixed order: identity → design → indices → corridor → tags → coatings LAST.
+const TYPE_LABEL = {
+  progressives: "Progressive", single: "Single vision", "anti-fatigue": "Anti-fatigue / digital single vision",
+  occupational: "Occupational / office", myopia: "Myopia control", bifocals: "Bifocal"
+};
+
+function describeLens(l, extra = "") {
+  const v = x => (x && String(x).trim()) || "not listed";
+  return [
+    `LENS: ${l.name} (${l.company})`,
+    `  TYPE: ${TYPE_LABEL[l.type] || l.type}`,
+    `  DESIGN: ${v(l.description)}`,
+    `  INDICES: ${v(l.index)}`,
+    `  CORRIDOR / FITTING HEIGHT: ${v(l.corridors)}`,
+    `  TAGS: ${v(l.tags)}`,
+    extra ? `  ${extra}` : null,
+    `  COATING OPTIONS (mention last, briefly): ${v(l.coatings)}`
+  ].filter(Boolean).join("\n");
+}
+
+// Find lenses whose names appear in the user's message, e.g. "tell me about Varilux Comfort Max".
+// Matches the full name, or the name without a leading brand word ("SmartLife Pure" for "ZEISS Progressive SmartLife Pure").
+const normalise = t => String(t || "").toLowerCase().replace(/[^a-z0-9.+ ]/g, " ").replace(/\s+/g, " ").trim();
+
+async function findLensesInMessage(db, message) {
+  const msg = ` ${normalise(message)} `;
+  const all = await queryDB(db, "SELECT * FROM lenses");
+  const hits = [];
+  for (const l of all) {
+    const full = normalise(l.name);
+    const brands = ["zeiss", "hoya", "hoyalux", "essilor", "varilux"];
+    const variants = new Set([full]);
+    // drop leading brand / category words for shorter references
+    let short = full;
+    for (const w of [...brands, "progressive", "single vision", "digital"]) {
+      if (short.startsWith(w + " ")) short = short.slice(w.length + 1);
+    }
+    if (short.length >= 5) variants.add(short);
+    // longest variant that appears in the message
+    const match = [...variants].filter(vn => msg.includes(` ${vn} `)).sort((a, b) => b.length - a.length)[0];
+    if (match) hits.push({ lens: l, text: match });
+  }
+  // Prefer the most specific match: drop a hit whose matched text sits inside a longer match
+  // ("smartlife" inside "smartlife pure", "nulux" inside "nulux ep")
+  hits.sort((a, b) => b.text.length - a.text.length);
+  const kept = [];
+  for (const h of hits) {
+    if (!kept.some(k => k.text !== h.text && k.text.includes(h.text))) kept.push(h);
+  }
+  return kept.slice(0, 3).map(h => h.lens);
+}
+
 // ── DB helpers ────────────────────────────────────────────────
 
 function queryDB(db, sql, params = []) {
@@ -280,6 +347,7 @@ async function findSimilarLenses(db, sourceLens, excludeId = null) {
   ]);
 
   return rows
+    .filter(r => String(r.id) !== String(sourceLens.id))
     .map(r => ({ lens: r, score: similarityScore(sourceLens, r) }))
     .sort((a, b) => b.score - a.score)
     .slice(0, 3)
@@ -290,19 +358,33 @@ async function findSimilarLenses(db, sourceLens, excludeId = null) {
 }
 
 async function fetchContextLenses(db, lensFilter = {}) {
-  let sql      = "SELECT name, company, type, `index`, corridors, coatings, tags FROM lenses WHERE 1=1";
+  let sql      = "SELECT name, company, type, description, `index`, corridors, coatings, tags FROM lenses WHERE 1=1";
   const params = [];
   if (lensFilter.type) { sql += " AND type = ?"; params.push(lensFilter.type); }
   sql += " ORDER BY name ASC LIMIT 8";
   const rows = await queryDB(db, sql, params);
-return rows.map(l =>
-  `${l.name} (${l.company}) | ${l.type} | idx:${l.index} | corridor:${l.corridors || "n/a"} | coatings:${l.coatings || ""} | tags:${l.tags || ""}`
-);
+  return rows.map(l => describeLens(l));
 }
 
 // ── Build lens context block for Claude ───────────────────────
 
 async function buildLensContext(db, message, lensFilter) {
+  const lower = message.toLowerCase();
+  const wantsAlternatives = /\b(similar|like|alternative|alternatives|equivalent|instead of|compare|comparable|replace|versus|vs)\b/.test(lower);
+
+  // 1. Lenses named directly in the question — give their full details first
+  const named = await findLensesInMessage(db, message);
+  if (named.length) {
+    let out = `\nLENS DATA FROM DATABASE (the lens(es) the user asked about):\n${named.map(l => describeLens(l)).join("\n\n")}`;
+    if (wantsAlternatives && named.length === 1) {
+      const similar = await findSimilarLenses(db, named[0], named[0].id);
+      if (similar.length) {
+        out += `\n\nSIMILAR LENSES IN DATABASE:\n${similar.map(({ lens, reason }) => describeLens(lens, `WHY SIMILAR: ${reason}`)).join("\n\n")}`;
+      }
+    }
+    return out;
+  }
+
   const mentionedName = extractMentionedLensName(message);
 
   const typeMap = {
@@ -326,12 +408,9 @@ async function buildLensContext(db, message, lensFilter) {
     if (sourceLens) {
       const similar = await findSimilarLenses(db, sourceLens, sourceLens.id);
       if (!similar.length) {
-        return `\n"${mentionedName}" is in the database but no similar lenses found. Source: ${sourceLens.name} (${sourceLens.company}) | ${sourceLens.type} | idx:${sourceLens.index}`;
+        return `\nLENS DATA FROM DATABASE (no similar lenses found):\n${describeLens(sourceLens)}`;
       }
-      const lines = similar.map(({ lens, reason }) =>
-        `• ${lens.name} (${lens.company}) | ${lens.type} | idx:${lens.index} | ${reason}`
-      );
-      return `\n"${mentionedName}" found in database. Similar lenses:\n${lines.join("\n")}`;
+      return `\nLENS DATA FROM DATABASE:\n${describeLens(sourceLens)}\n\nSIMILAR LENSES IN DATABASE:\n${similar.map(({ lens, reason }) => describeLens(lens, `WHY SIMILAR: ${reason}`)).join("\n\n")}`;
     }
 
     // Named lens not in DB — fall back to type+corridor match
@@ -344,10 +423,7 @@ async function buildLensContext(db, message, lensFilter) {
     if (!candidates.length) {
       return `\n"${mentionedName}" not in database. No catalogue lenses found to compare.`;
     }
-    const lines = candidates.slice(0, 3).map(l =>
-      `• ${l.name} (${l.company}) | ${l.type} | idx:${l.index} | tags:${l.tags || ""}`
-    );
-    return `\n"${mentionedName}" not in database. Closest catalogue options by design:\n${lines.join("\n")}`;
+    return `\n"${mentionedName}" is NOT in the database. Closest catalogue options by design:\n${candidates.slice(0, 3).map(l => describeLens(l)).join("\n\n")}`;
   }
 
   // General lens context — no specific lens name mentioned
@@ -357,6 +433,27 @@ if (clinicalOnly.some(k => message.toLowerCase().includes(k))) return "";
 const lensKeywords = ["lens", "recommend", "prescription", "progressive", "single vision", "bifocal", "which lens"];
 if (!lensKeywords.some(k => message.toLowerCase().includes(k))) return "";
 
+  // Screen / office work: also offer occupational and digital lenses, not just the type named
+  const screenWork = /\b(screen|screens|computer|monitor|laptop|office|desk|desktop|digital|pc)\b/.test(lower);
+  if (screenWork) {
+    const types = detectedType === "progressives" || /\b(add|presbyop|progressive|varifocal)/.test(lower)
+      ? ["progressives", "occupational"]
+      : ["anti-fatigue", "occupational", "single"];
+    // Up to 2 per lab for each type, so every supplier gets a look-in
+    const picks = [];
+    for (const t of types) {
+      const rows = await queryDB(db, "SELECT * FROM lenses WHERE type = ? ORDER BY company, name", [t]);
+      const perLab = {};
+      for (const l of rows) {
+        const k = String(l.company).toLowerCase();
+        if ((perLab[k] = (perLab[k] || 0) + 1) <= 2) picks.push(l);
+      }
+    }
+    if (picks.length) {
+      return `\nAVAILABLE LENSES (screen-work question — includes occupational options):\n${picks.map(l => describeLens(l)).join("\n\n")}`;
+    }
+  }
+
   const candidates = detectedType
     ? corridor
       ? await queryDB(db, "SELECT * FROM lenses WHERE type = ? AND corridors = ? LIMIT 5", [detectedType, corridor])
@@ -364,14 +461,11 @@ if (!lensKeywords.some(k => message.toLowerCase().includes(k))) return "";
     : await queryDB(db, "SELECT * FROM lenses LIMIT 5");
 
 if (candidates.length) {
-    const lines = candidates.map(l =>
-      `${l.name} (${l.company}) | ${l.type} | idx:${l.index} | corridor:${l.corridors || "n/a"} | coatings:${l.coatings || ""} | tags:${l.tags || ""}`
-    );
-    return `\nAVAILABLE LENSES:\n${lines.join("\n")}`;
+    return `\nAVAILABLE LENSES:\n${candidates.map(l => describeLens(l)).join("\n\n")}`;
   }
 
   const lenses = await fetchContextLenses(db, lensFilter || {});
-  return lenses.length ? `\nAVAILABLE LENSES:\n${lenses.join("\n")}` : "";
+  return lenses.length ? `\nAVAILABLE LENSES:\n${lenses.join("\n\n")}` : "";
 }
 
 // ── Health flag context ───────────────────────────────────────
