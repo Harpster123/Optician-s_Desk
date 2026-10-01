@@ -105,7 +105,7 @@ const CALCULATORS = {
 // Your professional standards. The assistant follows these over its general
 // knowledge. Edit, add or remove lines here — one rule per line.
 const CLINICAL_RULES = [
-  "For children (under 18), recommend impact-resistant lens materials — polycarbonate (1.59) or Trivex (1.53) — where the lens is available in them. Do not recommend a material or index for a child on thickness grounds alone.",
+  "For children (under 18), recommend impact-resistant lens materials — polycarbonate (1.59) or Trivex (1.53) — where the lens is available in them (see each lens's IMPACT-RESISTANT line). If a lens is NOT available in either, say so plainly and note that this matters for children. Do not recommend a material or index for a child on thickness grounds alone.",
 ];
 
 function buildSystemPrompt() {
@@ -166,8 +166,14 @@ ACCURACY RULES (these override style):
 - Typical working distances: desktop screen ~50–70cm (intermediate), laptop/tablet ~40–50cm, reading ~33–40cm
 - If unsure about a clinical point, leave it out rather than guess
 - Use each lens name exactly as written on its LENS line — never add or drop words (e.g. don't add "Plus")
+- Shorter corridors / lower minimum fitting heights suit SHALLOW frames; longer corridors suit DEEPER frames. Never say a short corridor is for deep frames
+- Keep corridor length and minimum fitting height distinct — e.g. "14mm (min fitting height 17mm)" means a 14mm corridor needing at least 17mm fitting height
+- Polycarbonate is 1.59 and Trivex is 1.53 — never call any other index polycarbonate or Trivex. Use the IMPACT-RESISTANT line to see which lenses come in them
 - Quote the CORRIDOR / FITTING HEIGHT line word for word — never merge or summarise options (e.g. "fixed 14, 16 or 18mm, or variable from 13mm" must not become "13–18mm")
-- No comparisons between suppliers or lenses that aren't in the data (e.g. "easier to adapt to than competitors", "better than X"), no price or cost statements, and no claims about clinical evidence or effectiveness unless the DESIGN line states them
+- No comparisons between suppliers or lenses that aren't in the data (e.g. "easier to adapt to than competitors", "better than X")
+- No price or cost language at all — don't use the words cost, price, cheap, expensive, affordable or value for money. Tier tags (budget / mid / premium) can be described only as "budget-tier", "mid-tier" or "premium-tier"
+- No effectiveness claims — don't say "evidence-based", "clinically proven", "clinically supported" or quote efficacy figures unless the DESIGN line states them
+- Don't call indices "stock" or "surfaced" — the data doesn't say which
 - List indices exactly as given in INDICES — never shorten or drop values; a range like "1.50–1.74" is only OK if every value in between is listed
 - Describe the lens type exactly as the DESIGN line does (e.g. a "degressive" lens is not a "short-corridor progressive")
 - When the user gives a prescription, include brief index guidance using only indices the recommended lenses are listed in (e.g. for −6.00, suggest 1.67 or 1.74 where available, for thinner, lighter lenses)
@@ -283,13 +289,33 @@ const TYPE_LABEL = {
   occupational: "Occupational / office", myopia: "Myopia control", bifocals: "Bifocal"
 };
 
+// Common lens materials by index, so the AI never confuses e.g. 1.59 (polycarbonate) with 1.60
+const MATERIAL_BY_INDEX = {
+  "1.50": "standard plastic / CR-39", "1.53": "Trivex — impact-resistant", "1.55": "mid-index plastic",
+  "1.56": "mid-index plastic", "1.59": "polycarbonate — impact-resistant", "1.60": "high-index plastic (not impact-rated)",
+  "1.67": "high-index plastic", "1.70": "high-index plastic", "1.74": "ultra-high-index plastic"
+};
+
+function describeIndices(indexText) {
+  const list = String(indexText || "").split(",").map(x => x.trim()).filter(Boolean);
+  if (!list.length) return { text: "not listed", impact: "not known — no indices listed" };
+  const text = list.map(i => MATERIAL_BY_INDEX[i] ? `${i} (${MATERIAL_BY_INDEX[i]})` : i).join(", ");
+  const impactOptions = list.filter(i => i === "1.53" || i === "1.59");
+  const impact = impactOptions.length
+    ? `YES — ${impactOptions.map(i => i === "1.59" ? "1.59 polycarbonate" : "1.53 Trivex").join(" and ")}`
+    : "NO — not listed in polycarbonate or Trivex";
+  return { text, impact };
+}
+
 function describeLens(l, extra = "") {
   const v = x => (x && String(x).trim()) || "not listed";
+  const idx = describeIndices(l.index);
   return [
     `LENS: ${l.name} (${l.company})`,
     `  TYPE: ${TYPE_LABEL[l.type] || l.type}`,
     `  DESIGN: ${v(l.description)}`,
-    `  INDICES: ${v(l.index)}`,
+    `  INDICES (material): ${idx.text}`,
+    `  IMPACT-RESISTANT MATERIAL AVAILABLE: ${idx.impact}`,
     `  CORRIDOR / FITTING HEIGHT: ${v(l.corridors)}`,
     `  TAGS: ${v(l.tags)}`,
     extra ? `  ${extra}` : null,
