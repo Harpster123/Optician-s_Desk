@@ -140,6 +140,13 @@ ANSWER STRUCTURE FOR LENS QUESTIONS:
 - Never open an answer with coatings, and never let coatings take up more space than the lens design
 - If a field is "not listed", say it isn't listed in the database rather than guessing
 
+HOW TO RECOMMEND:
+- Lenses under "BEST-MATCHING LENSES" are already ranked by fit, with the reason they were shortlisted
+- Give ONE main recommendation and 1–2 alternatives, and say in a few words why each suits this patient's needs (use their DESIGN line and tags)
+- Prefer lenses whose design clearly matches the job over generic all-rounders; for screen-heavy presbyopes, an occupational/office lens is usually the main or second-pair answer
+- Spread alternatives across suppliers where sensible, so the dispenser has options with their usual lab
+- If the shortlist contains nothing suitable, say so rather than forcing a pick
+
 ACCURACY RULES (these override style):
 - Only describe a lens using the fields given for it. Do not add features, corridor lengths, "standard" values, prices or cost comparisons from general knowledge
 - No health or wellbeing claims for coatings or filters (e.g. sleep, eye health from blue-light filters) unless they appear in the lens data
@@ -430,46 +437,103 @@ async function buildLensContext(db, message, lensFilter) {
     return `\n"${mentionedName}" is NOT in the database. Closest catalogue options by design:\n${candidates.slice(0, 3).map(l => describeLens(l)).join("\n\n")}`;
   }
 
-  // General lens context — no specific lens name mentioned
-const clinicalOnly = ["what index", "which index", "index would", "recommend index", "index for"];
-if (clinicalOnly.some(k => message.toLowerCase().includes(k))) return "";
+  // General lens question — score every lens against what the user needs
+  const clinicalOnly = ["what index", "which index", "index would", "recommend index", "index for"];
+  if (clinicalOnly.some(k => lower.includes(k))) return "";
 
-const lensKeywords = ["lens", "recommend", "prescription", "progressive", "single vision", "bifocal", "which lens"];
-if (!lensKeywords.some(k => message.toLowerCase().includes(k))) return "";
+  const need = detectNeeds(lower, detectedType);
+  const lensKeywords = ["lens", "recommend", "prescription", "progressive", "single vision", "bifocal", "which lens", "suit", "best"];
+  if (!need.tags.size && !need.types.size && !lensKeywords.some(k => lower.includes(k))) return "";
 
-  // Screen / office work: also offer occupational and digital lenses, not just the type named
-  const screenWork = /\b(screen|screens|computer|monitor|laptop|office|desk|desktop|digital|pc)\b/.test(lower);
-  if (screenWork) {
-    const types = detectedType === "progressives" || /\b(add|presbyop|progressive|varifocal)/.test(lower)
-      ? ["progressives", "occupational"]
-      : ["anti-fatigue", "occupational", "single"];
-    // Up to 2 per lab for each type, so every supplier gets a look-in
-    const picks = [];
-    for (const t of types) {
-      const rows = await queryDB(db, "SELECT * FROM lenses WHERE type = ? ORDER BY company, name", [t]);
-      const perLab = {};
-      for (const l of rows) {
-        const k = String(l.company).toLowerCase();
-        if ((perLab[k] = (perLab[k] || 0) + 1) <= 2) picks.push(l);
-      }
-    }
-    if (picks.length) {
-      return `\nAVAILABLE LENSES (screen-work question — includes occupational options):\n${picks.map(l => describeLens(l)).join("\n\n")}`;
-    }
+  const all = await queryDB(db, "SELECT * FROM lenses");
+  const picks = pickLenses(all, need);
+  if (!picks.length) {
+    const lenses = await fetchContextLenses(db, lensFilter || {});
+    return lenses.length ? `\nAVAILABLE LENSES:\n${lenses.join("\n\n")}` : "";
   }
 
-  const candidates = detectedType
-    ? corridor
-      ? await queryDB(db, "SELECT * FROM lenses WHERE type = ? AND corridors = ? LIMIT 5", [detectedType, corridor])
-      : await queryDB(db, "SELECT * FROM lenses WHERE type = ? LIMIT 5", [detectedType])
-    : await queryDB(db, "SELECT * FROM lenses LIMIT 5");
+  const summary = [
+    need.types.size ? `lens types: ${[...need.types].join(", ")}` : null,
+    need.tags.size  ? `needs: ${[...need.tags].join(", ")}` : null,
+    need.highRx     ? `high prescription (${need.highRx}) — favour lenses offered in 1.67/1.74` : null
+  ].filter(Boolean).join("; ");
 
-if (candidates.length) {
-    return `\nAVAILABLE LENSES:\n${candidates.map(l => describeLens(l)).join("\n\n")}`;
+  return `\nBEST-MATCHING LENSES FROM DATABASE (ranked by fit to the question${summary ? " — " + summary : ""}):\n` +
+    picks.map(({ lens, reasons }) => describeLens(lens, reasons.length ? `WHY SHORTLISTED: ${reasons.join(", ")}` : "")).join("\n\n");
+}
+
+// ── Matching lenses to the job ────────────────────────────────
+// Turns the question into wanted lens types + tags (the same tag vocabulary used in the database).
+const NEED_RULES = [
+  { re: /\b(screens?|computers?|monitors?|laptops?|office|desk|desktop|digital|pc|devices?|tablets?|phones?)\b/, tags: ["digital", "office"], screen: true },
+  { re: /\b(read|reading|near|books?|close work|sewing|craft|crafts|knitting|paperwork)\b/, tags: ["near-work"] },
+  { re: /\b(driv\w*|night|car|headlights?|glare|road)\b/, tags: ["driving"] },
+  { re: /\b(outdoors?|sports?|golf|tennis|hik\w*|sun|cycling|fishing)\b/, tags: ["outdoor"] },
+  { re: /\b(kids?|child|children|paediatric|pediatric|school|teen\w*|myopia (control|management|progression))\b/, tags: ["kids", "myopia-control"], types: ["myopia"] },
+  { re: /\b(first[- ]time|new wearer|never worn|adapt\w*|swim|sway|dizzy|non[- ]tolerance|struggl\w*)\b/, tags: ["comfort", "wide-corridor"] },
+  { re: /\b(budget|cheap\w*|afford\w*|entry|value|low cost)\b/, tags: ["budget"] },
+  { re: /\b(premium|top|high[- ]end|personali[sz]ed|individual\w*|custom\w*|bespoke|best available)\b/, tags: ["premium", "bespoke", "advanced-design", "position-of-wear"] },
+  { re: /\b(everyday|all[- ]day|general (use|wear)|daily)\b/, tags: ["everyday"] },
+  { re: /\b(older|senior|elderly|retired)\b/, tags: ["senior"] },
+  { re: /\b(low vision|amd|macular)\b/, tags: ["low-vision"] }
+];
+
+function detectNeeds(lower, detectedType) {
+  const tags = new Set(), types = new Set();
+  let screen = false;
+  for (const rule of NEED_RULES) {
+    if (rule.re.test(lower)) {
+      rule.tags.forEach(t => tags.add(t));
+      (rule.types || []).forEach(t => types.add(t));
+      if (rule.screen) screen = true;
+    }
   }
+  if (detectedType) types.add(detectedType);
 
-  const lenses = await fetchContextLenses(db, lensFilter || {});
-  return lenses.length ? `\nAVAILABLE LENSES:\n${lenses.join("\n\n")}` : "";
+  // Age if given ("52", "aged 52", "8 year old") — ignores Rx values, mm, cm, hours etc.
+  const ageMatch = lower.match(/\b(\d{1,2})\s*(?:yo|y\/o|yrs?|years?[- ]old|year[- ]old)\b/) ||
+                   lower.match(/\bage[d]?\s*(\d{1,2})\b/) ||
+                   lower.match(/(?:^|[\s,(])([1-9]\d)(?=\s*[,)]|\s*$|\s+(?:and|with|who|but)\b)/);
+  const age = ageMatch ? parseInt(ageMatch[1], 10) : null;
+  if (age !== null && age < 18) { tags.add("kids"); }
+
+  const noAdd = /\b(no|without (?:an? )?|zero) (reading )?add\b|\bnot (yet )?presbyop|\bpre-?presbyop/.test(lower);
+  const addCue = /\b(add|presbyop\w*|progressives?|varifocals?|multifocals?|bifocals?)\b/.test(lower) && !noAdd;
+  const presbyope = !noAdd && (addCue || (age !== null && age >= 45)) && !(age !== null && age < 38 && !/\+\s?\d\.\d{2}\s*add/.test(lower));
+  if (presbyope && !types.has("bifocals")) types.add("progressives");
+  if (presbyope && (screen || tags.has("near-work"))) types.add("occupational");    // office lens as main or second pair
+  if (!presbyope && screen && !types.has("myopia")) { types.add("anti-fatigue"); types.add("single"); }
+
+  // Prescription strength, e.g. "-6.00" or "+5.50" (ignoring the add)
+  const sph = [...lower.matchAll(/([+-]\s?\d{1,2}(?:\.\d{1,2})?)(?!\s*add)/g)].map(m => Math.abs(parseFloat(m[1].replace(/\s/g, ""))));
+  const strongest = sph.length ? Math.max(...sph) : 0;
+  const highRx = strongest >= 4 ? (lower.match(/[+-]\s?\d{1,2}(?:\.\d{1,2})?/) || [""])[0] : null;
+
+  return { tags, types, highRx };
+}
+
+function pickLenses(all, need, max = 8, perLab = 3) {
+  const scored = all
+    .filter(l => !need.types.size || need.types.has(l.type))
+    .map(l => {
+      const lensTags = String(l.tags || "").toLowerCase().split(",").map(t => t.trim()).filter(Boolean);
+      const reasons = [];
+      let score = 0;
+      if (need.types.has(l.type)) { score += 3; reasons.push(TYPE_LABEL[l.type] || l.type); }
+      for (const t of need.tags) if (lensTags.includes(t)) { score += 2; reasons.push(t); }
+      if (need.highRx && /1\.(67|74)/.test(l.index || "")) { score += 1; reasons.push("high-index available"); }
+      if (l.description) score += 0.5;          // prefer lenses we can actually describe
+      if (l.index) score += 0.25;
+      return { lens: l, score, reasons };
+    })
+    .sort((a, b) => b.score - a.score || String(a.lens.name).localeCompare(b.lens.name));
+
+  // Keep variety: at most `perLab` per lab, and make sure each wanted type is represented
+  const out = [], labCount = {};
+  const take = x => { const k = String(x.lens.company).toLowerCase(); if ((labCount[k] || 0) >= perLab || out.includes(x)) return false; labCount[k] = (labCount[k] || 0) + 1; out.push(x); return true; };
+  for (const t of need.types) { const best = scored.find(x => x.lens.type === t); if (best) take(best); }
+  for (const x of scored) { if (out.length >= max) break; take(x); }
+  return out.sort((a, b) => b.score - a.score);
 }
 
 // ── Health flag context ───────────────────────────────────────
