@@ -101,6 +101,13 @@ const CALCULATORS = {
 
 // ── System prompt ─────────────────────────────────────────────
 
+// ── Clinical rules (owned by Optician's Desk) ─────────────────
+// Your professional standards. The assistant follows these over its general
+// knowledge. Edit, add or remove lines here — one rule per line.
+const CLINICAL_RULES = [
+  "For children (under 18), recommend impact-resistant lens materials — polycarbonate (1.59) or Trivex (1.53) — where the lens is available in them. Do not recommend a material or index for a child on thickness grounds alone.",
+];
+
 function buildSystemPrompt() {
   const healthContext = Object.values(HEALTH_FLAGS)
     .map(v => `${v.label}: ${v.guidance}`)
@@ -140,12 +147,17 @@ ANSWER STRUCTURE FOR LENS QUESTIONS:
 - Never open an answer with coatings, and never let coatings take up more space than the lens design
 - If a field is "not listed", say it isn't listed in the database rather than guessing
 
+CLINICAL RULES (professional standards — always follow these, they override general knowledge):
+${CLINICAL_RULES.map(rule => "- " + rule).join("\n")}
+
 HOW TO RECOMMEND:
 - Lenses under "BEST-MATCHING LENSES" are already ranked by fit, with the reason they were shortlisted
 - Give ONE main recommendation and 1–2 alternatives, and say in a few words why each suits this patient's needs (use their DESIGN line and tags)
 - Prefer lenses whose design clearly matches the job over generic all-rounders; for screen-heavy presbyopes, an occupational/office lens is usually the main or second-pair answer
 - Spread alternatives across suppliers where sensible, so the dispenser has options with their usual lab
 - If the shortlist contains nothing suitable, say so rather than forcing a pick
+- When a supplier has a suitable lens on the shortlist, include it — don't leave a supplier out for no reason (e.g. for myopia control, consider each supplier's lens)
+- Office / occupational lenses with distance profiles (e.g. 100/200/400cm, Book/Near/Room, Close/Screen/Space ~1m/2m/6m): the distance is how far clear vision extends. Choose the SHORTEST profile that covers the patient's tasks — about 1m for screen + desk work, about 2m to include colleagues or a meeting table, 4m+ for moving around a room. Shorter profiles give the widest near and intermediate fields
 
 ACCURACY RULES (these override style):
 - Only describe a lens using the fields given for it. Do not add features, corridor lengths, "standard" values, prices or cost comparisons from general knowledge
@@ -154,6 +166,8 @@ ACCURACY RULES (these override style):
 - Typical working distances: desktop screen ~50–70cm (intermediate), laptop/tablet ~40–50cm, reading ~33–40cm
 - If unsure about a clinical point, leave it out rather than guess
 - Use each lens name exactly as written on its LENS line — never add or drop words (e.g. don't add "Plus")
+- Quote the CORRIDOR / FITTING HEIGHT line word for word — never merge or summarise options (e.g. "fixed 14, 16 or 18mm, or variable from 13mm" must not become "13–18mm")
+- No comparisons between suppliers or lenses that aren't in the data (e.g. "easier to adapt to than competitors", "better than X"), no price or cost statements, and no claims about clinical evidence or effectiveness unless the DESIGN line states them
 - List indices exactly as given in INDICES — never shorten or drop values; a range like "1.50–1.74" is only OK if every value in between is listed
 - Describe the lens type exactly as the DESIGN line does (e.g. a "degressive" lens is not a "short-corridor progressive")
 - When the user gives a prescription, include brief index guidance using only indices the recommended lenses are listed in (e.g. for −6.00, suggest 1.67 or 1.74 where available, for thinner, lighter lenses)
@@ -531,7 +545,14 @@ function pickLenses(all, need, max = 8, perLab = 3) {
   // Keep variety: at most `perLab` per lab, and make sure each wanted type is represented
   const out = [], labCount = {};
   const take = x => { const k = String(x.lens.company).toLowerCase(); if ((labCount[k] || 0) >= perLab || out.includes(x)) return false; labCount[k] = (labCount[k] || 0) + 1; out.push(x); return true; };
-  for (const t of need.types) { const best = scored.find(x => x.lens.type === t); if (best) take(best); }
+  // Each wanted type gets its best 2 (from different labs where possible) before the rest fill up
+  for (const t of need.types) {
+    const ofType = scored.filter(x => x.lens.type === t);
+    const first = ofType[0];
+    if (first) take(first);
+    const second = ofType.find(x => x !== first && String(x.lens.company).toLowerCase() !== String(first.lens.company).toLowerCase()) || ofType[1];
+    if (second) take(second);
+  }
   for (const x of scored) { if (out.length >= max) break; take(x); }
   return out.sort((a, b) => b.score - a.score);
 }
