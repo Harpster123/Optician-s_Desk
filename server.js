@@ -338,6 +338,10 @@ app.get("/forgot-password", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "forgot-password.html"));
 });
 
+app.get("/terms", (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "terms.html"));
+});
+
 app.get("/reset-password", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "reset-password.html"));
 });

@@ -897,7 +897,7 @@
           </div>
 
           <div class="odb-footer__bottom">
-            <p>Optician's Desk — built for NZ optical dispensing</p>
+            <p>Optician's Desk — built for NZ optical dispensing · <a href="/terms" style="color:inherit">Terms of Service</a></p>
             <p>For clinical emergencies contact your professional body or supervisor.</p>
           </div>
 
