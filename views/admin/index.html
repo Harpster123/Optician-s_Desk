@@ -539,6 +539,38 @@
     /* ── Users stats ── */
     #users-stats { margin-bottom: 28px; }
 
+    /* ── Overview tab ── */
+    .ov-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+    .ov-header h1 { margin: 0; }
+    .ov-updated { font-size: .8rem; color: #777; }
+    .ov-section-label { font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #5f776c; margin: 6px 0 10px; }
+    .stat-card .sub { font-size: .74rem; color: #888; margin-top: 4px; }
+    .ov-card { background: #fff; border-radius: 16px; box-shadow: 0 6px 20px rgba(0,0,0,.07); padding: 20px 22px; margin-bottom: 24px; }
+    .ov-card h2 { margin: 0 0 4px; font-size: 1rem; }
+    .ov-card .ov-hint { margin: 0 0 16px; font-size: .8rem; color: #777; }
+    .lab-bars { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+    .lab-bar-row { display: grid; grid-template-columns: 120px 1fr 44px; align-items: center; gap: 12px; font-size: .88rem; }
+    .lab-bar-row .lab-name { font-weight: 600; color: #1f2a26; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lab-bar-track { height: 14px; background: #eef2f0; border-radius: 4px; position: relative; }
+    .lab-bar-fill { height: 100%; background: #2f4a3e; border-radius: 0 4px 4px 0; min-width: 2px; }
+    .lab-bar-row .lab-total { text-align: right; font-weight: 700; color: #1f2a26; font-variant-numeric: tabular-nums; }
+    .lab-bar-row:hover .lab-bar-fill { background: #1f3d33; }
+    .ov-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    .ov-table th { text-align: left; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: #777; font-weight: 700; padding: 8px 10px; border-bottom: 1px solid #e6ece9; }
+    .ov-table td { padding: 8px 10px; border-bottom: 1px solid #f0f3f1; font-variant-numeric: tabular-nums; }
+    .ov-table td.num, .ov-table th.num { text-align: right; }
+    .ov-table tr:last-child td { border-bottom: none; }
+    .ov-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 24px; }
+    @media (max-width: 900px) { .ov-grid { grid-template-columns: minmax(0, 1fr); } .lab-bar-row { grid-template-columns: 90px 1fr 40px; } }
+
+    /* ── CSV duplicate status ── */
+    .status-pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .72rem; font-weight: 700; white-space: nowrap; }
+    .status-new    { background: #e3f3ea; color: #1f7a4a; }
+    .status-exists { background: #fff4dc; color: #8a5a00; }
+    .status-repeat { background: #f1f1f1; color: #666; }
+    .dup-options { display: none; margin: 10px 0 4px; padding: 12px 14px; background: #fffaf0; border: 1px solid #f3e2b8; border-radius: 10px; font-size: .85rem; }
+    .dup-options.visible { display: block; }
+    .dup-options label { display: block; margin-top: 6px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -556,12 +588,61 @@
 
   <!-- Tabs -->
   <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('lenses', this)">Lenses</button>
+    <button class="tab-btn active" onclick="switchTab('overview', this)">Overview</button>
+    <button class="tab-btn" onclick="switchTab('lenses', this)">Lenses</button>
     <button class="tab-btn" onclick="switchTab('users', this)">Users</button>
   </div>
 
+  <!-- ── OVERVIEW TAB ── -->
+  <div class="tab-panel active" id="tab-overview">
+    <div class="ov-header">
+      <h1>Overview</h1>
+      <span class="ov-updated" id="ov-updated"></span>
+    </div>
+
+    <div class="ov-card" id="ov-dupes" style="display:none;border:1px solid #f3e2b8;background:#fffaf0">
+      <h2>⚠ Possible duplicate lenses</h2>
+      <p class="ov-hint">These share the same lab and name (ignoring capitals and spacing). Keep one of each and delete the others in the Lenses tab.</p>
+      <ul id="ov-dupes-list" style="margin:0;padding-left:1.1rem;font-size:.86rem;line-height:1.7"></ul>
+    </div>
+
+    <div class="ov-section-label">Members</div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="num" id="ov-users">—</div><div class="lbl">Total users</div><div class="sub" id="ov-joined"></div></div>
+      <div class="stat-card"><div class="num" id="ov-paid">—</div><div class="lbl">Paid members</div><div class="sub" id="ov-paid-sub"></div></div>
+      <div class="stat-card"><div class="num" id="ov-signedin">—</div><div class="lbl">Have signed in</div><div class="sub" id="ov-signedin-sub"></div></div>
+      <div class="stat-card"><div class="num" id="ov-active7">—</div><div class="lbl">Active last 7 days</div><div class="sub" id="ov-active30"></div></div>
+    </div>
+
+    <div class="ov-section-label">Lens database</div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="num" id="ov-lenses">—</div><div class="lbl">Lenses</div></div>
+      <div class="stat-card"><div class="num" id="ov-labs">—</div><div class="lbl">Labs / suppliers</div></div>
+    </div>
+
+    <div class="ov-grid">
+      <div class="ov-card">
+        <h2>Lenses per lab</h2>
+        <p class="ov-hint">Number of lens designs listed for each supplier.</p>
+        <div class="lab-bars" id="ov-lab-bars"><div class="empty-state">Loading…</div></div>
+        <div style="overflow-x:auto">
+          <table class="ov-table" id="ov-lab-table"></table>
+        </div>
+      </div>
+
+      <div class="ov-card">
+        <h2>Recent sign-ins</h2>
+        <p class="ov-hint">Sign-ins are counted from when this dashboard went live; earlier logins weren't recorded.</p>
+        <table class="ov-table">
+          <thead><tr><th>Name</th><th>Last sign-in</th><th class="num">Sign-ins</th></tr></thead>
+          <tbody id="ov-recent"><tr><td colspan="3" class="empty-state">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div><!-- /tab-overview -->
+
   <!-- ── LENSES TAB ── -->
-  <div class="tab-panel active" id="tab-lenses">
+  <div class="tab-panel" id="tab-lenses">
 
   <!-- Header -->
   <div class="page-header">
@@ -603,6 +684,7 @@
             <tr>
               <th></th>
               <th>#</th>
+              <th>Status</th>
               <th>Name</th>
               <th>Company</th>
               <th>Type</th>
@@ -615,6 +697,11 @@
           </thead>
           <tbody id="preview-tbody"></tbody>
         </table>
+      </div>
+      <div class="dup-options" id="dup-options">
+        <strong id="dup-options-title"></strong>
+        <label><input type="radio" name="dup-mode" value="skip" checked onchange="setDupMode(this.value)"> Skip them, and keep what's already in the database <em>(recommended)</em></label>
+        <label><input type="radio" name="dup-mode" value="update" onchange="setDupMode(this.value)"> Update them with the values from this CSV</label>
       </div>
       <div class="preview-actions">
         <button class="btn btn-secondary" onclick="clearPreview()">✕ Cancel</button>
@@ -957,6 +1044,82 @@
     document.getElementById('tab-' + name).classList.add('active');
     btn.classList.add('active');
     if (name === 'users') loadUsers();
+    if (name === 'overview') loadOverview();
+  }
+
+  // ── Overview (ops dashboard) ─────────────────────────────
+  const TYPE_LABELS = {
+    progressives: "Progressive", single: "Single vision", "anti-fatigue": "Anti-fatigue",
+    occupational: "Occupational", myopia: "Myopia", bifocals: "Bifocal"
+  };
+
+  function fmtWhen(d) {
+    if (!d) return "—";
+    const dt = new Date(d), mins = Math.round((Date.now() - dt) / 60000);
+    if (mins < 60)   return mins <= 1 ? "just now" : `${mins} min ago`;
+    if (mins < 1440) return `${Math.round(mins / 60)} h ago`;
+    if (mins < 10080) return `${Math.round(mins / 1440)} d ago`;
+    return dt.toLocaleDateString('en-NZ', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  async function loadOverview() {
+    try {
+      const res = await fetch("/api/admin/stats");
+      if (res.status === 401) return window.location.href = "/login";
+      const d = await res.json();
+      if (!res.ok) { toast(d.error || "Failed to load overview", "error"); return; }
+      const u = d.users, pct = (a, b) => b ? Math.round(a / b * 100) + "%" : "—";
+      const set = (id, v) => { document.getElementById(id).textContent = v; };
+
+      set("ov-users", u.total);
+      set("ov-joined", `${u.joined_30d} joined in the last 30 days`);
+      set("ov-paid", u.paid);
+      set("ov-paid-sub", `${pct(u.paid, u.total)} of users`);
+      set("ov-signedin", u.ever_signed_in);
+      set("ov-signedin-sub", `${u.signed_in_7d} signed in this week`);
+      set("ov-active7", u.active_7d);
+      set("ov-active30", `${u.active_30d} active in the last 30 days`);
+      set("ov-lenses", d.lenses.total);
+      set("ov-labs", d.lenses.labs);
+      set("ov-updated", "Updated " + new Date().toLocaleTimeString('en-NZ', { hour: 'numeric', minute: '2-digit' }));
+
+      // Lenses per lab — one bar per supplier (single colour; length = count)
+      const labs = d.lenses.by_lab, max = Math.max(1, ...labs.map(l => l.total));
+      document.getElementById("ov-lab-bars").innerHTML = labs.length ? labs.map(l => `
+        <div class="lab-bar-row" title="${esc(l.company)}: ${l.total} lens${l.total !== 1 ? 'es' : ''}">
+          <span class="lab-name">${esc(l.company)}</span>
+          <div class="lab-bar-track"><div class="lab-bar-fill" style="width:${(l.total / max * 100).toFixed(1)}%"></div></div>
+          <span class="lab-total">${l.total}</span>
+        </div>`).join("") : `<div class="empty-state">No lenses yet.</div>`;
+
+      // Breakdown table by lens type (only types that exist)
+      const types = Object.keys(TYPE_LABELS).filter(t => labs.some(l => l.types[t]));
+      const other = labs.some(l => Object.keys(l.types).some(t => !TYPE_LABELS[t]));
+      document.getElementById("ov-lab-table").innerHTML = labs.length ? `
+        <thead><tr><th>Lab</th>${types.map(t => `<th class="num">${TYPE_LABELS[t]}</th>`).join("")}${other ? '<th class="num">Other</th>' : ''}<th class="num">Total</th></tr></thead>
+        <tbody>${labs.map(l => `<tr>
+          <td>${esc(l.company)}</td>
+          ${types.map(t => `<td class="num">${l.types[t] || "—"}</td>`).join("")}
+          ${other ? `<td class="num">${Object.entries(l.types).filter(([t]) => !TYPE_LABELS[t]).reduce((n, [, v]) => n + v, 0) || "—"}</td>` : ""}
+          <td class="num"><strong>${l.total}</strong></td></tr>`).join("")}</tbody>` : "";
+
+      // Possible duplicates already in the database
+      const dupes = d.duplicates || [];
+      document.getElementById("ov-dupes").style.display = dupes.length ? "" : "none";
+      document.getElementById("ov-dupes-list").innerHTML = dupes.map(g =>
+        `<li><strong>${esc(g[0].company)} ${esc(g[0].name)}</strong> — ${g.length} copies (IDs ${g.map(x => x.id).join(", ")})</li>`).join("");
+
+      // Recent sign-ins
+      document.getElementById("ov-recent").innerHTML = d.recent_signins.length ? d.recent_signins.map(r => `
+        <tr>
+          <td><div class="td-name">${esc(r.name)}${r.is_paid ? ' <span class="badge-member" style="margin-left:4px">Member</span>' : ''}</div>
+              <div style="font-size:.76rem;color:#888">${esc(r.email)}</div></td>
+          <td>${fmtWhen(r.last_login_at)}</td>
+          <td class="num">${r.login_count}</td>
+        </tr>`).join("") : `<tr><td colspan="3" class="empty-state">No sign-ins recorded yet.</td></tr>`;
+    } catch {
+      toast("Failed to load overview", "error");
+    }
   }
 
   // ── Users ────────────────────────────────────────────────
@@ -1087,6 +1250,21 @@
 
   // ── CSV Import ───────────────────────────────────────────
   let previewLenses = []; // holds parsed rows from the server
+  let dupMode = "skip";   // what to do with lenses already in the database
+
+  const STATUS_PILL = {
+    new:    '<span class="status-pill status-new">New</span>',
+    exists: '<span class="status-pill status-exists" title="A lens with this company and name is already in the database">Already in DB</span>',
+    repeat: '<span class="status-pill status-repeat" title="This lens appears earlier in the same file">Repeated in file</span>'
+  };
+
+  function setDupMode(mode) {
+    dupMode = mode;
+    previewLenses.forEach(l => { if (l._status === "exists" && l._valid) l._selected = (mode === "update"); });
+    renderPreview();
+  }
+
+  const canSelect = l => l._valid && l._status !== "repeat";
 
   // File input change
   document.getElementById("csv-file-input").addEventListener("change", function() {
@@ -1125,7 +1303,10 @@
       const data = await res.json();
       if (!res.ok) { toast(data.error || "Upload failed", "error"); return; }
 
-      previewLenses = data.lenses.map(l => ({ ...l, _selected: l._valid }));
+      // Only brand-new lenses are ticked by default; existing ones depend on the skip/update choice
+      dupMode = "skip";
+      document.querySelector('input[name="dup-mode"][value="skip"]').checked = true;
+      previewLenses = data.lenses.map(l => ({ ...l, _selected: l._valid && l._status === "new" }));
       renderPreview();
 
     } catch {
@@ -1142,29 +1323,39 @@
     const invalidCount = previewLenses.filter(l => !l._valid).length;
     const selectedCount = previewLenses.filter(l => l._selected).length;
 
+    const newCount    = previewLenses.filter(l => l._valid && l._status === "new").length;
+    const existCount  = previewLenses.filter(l => l._status === "exists").length;
+    const repeatCount = previewLenses.filter(l => l._status === "repeat").length;
     counts.innerHTML = `
-      <span class="valid">✓ ${validCount} valid</span>
+      <span class="valid">✓ ${newCount} new</span>
+      ${existCount  ? `&nbsp;·&nbsp;<span style="color:#8a5a00;font-weight:600">${existCount} already in database</span>` : ""}
+      ${repeatCount ? `&nbsp;·&nbsp;${repeatCount} repeated in file` : ""}
       ${invalidCount ? `&nbsp;·&nbsp;<span class="invalid">✗ ${invalidCount} missing required fields</span>` : ""}
       &nbsp;·&nbsp;${selectedCount} selected for import
     `;
+    const dup = document.getElementById("dup-options");
+    dup.classList.toggle("visible", existCount > 0);
+    document.getElementById("dup-options-title").textContent =
+      `${existCount} lens${existCount !== 1 ? "es are" : " is"} already in the database. What should happen to ${existCount !== 1 ? "them" : "it"}?`;
 
     tbody.innerHTML = previewLenses.map((l, i) => `
       <tr class="${!l._valid ? 'row-invalid' : ''} ${!l._selected ? 'row-deselected' : ''}" id="prev-row-${i}">
         <td>
           <input type="checkbox" class="row-toggle"
             ${l._selected ? "checked" : ""}
-            ${!l._valid   ? "disabled" : ""}
+            ${!canSelect(l) ? "disabled" : ""}
             onchange="toggleRow(${i}, this.checked)" />
         </td>
         <td class="row-num">${l._row}</td>
+        <td>${STATUS_PILL[l._status] || ""}</td>
         <td>${esc(l.name)    || '<span style="color:#b91c1c">missing</span>'}</td>
         <td>${esc(l.company) || '<span style="color:#b91c1c">missing</span>'}</td>
         <td>${esc(l.type)    || '<span style="color:#b91c1c">missing</span>'}</td>
-        <td>${l.index      || '—'}</td>
-        <td>${l.corridors  || '—'}</td>
+        <td>${esc(l.index)     || '—'}</td>
+        <td>${esc(l.corridors) || '—'}</td>
         <td>${esc(l.coatings)  || '—'}</td>
         <td>${esc(l.tags)      || '—'}</td>
-        <td title="${esc(l.description)}">${l.description ? l.description.slice(0, 40) + (l.description.length > 40 ? '…' : '') : '—'}</td>
+        <td title="${esc(l.description)}">${l.description ? esc(l.description.slice(0, 40)) + (l.description.length > 40 ? '…' : '') : '—'}</td>
       </tr>
     `).join("");
 
@@ -1190,11 +1381,20 @@
     const validCount   = previewLenses.filter(l => l._valid).length;
     const invalidCount = previewLenses.filter(l => !l._valid).length;
     const selectedCount = previewLenses.filter(l => l._selected).length;
+    const newCount    = previewLenses.filter(l => l._valid && l._status === "new").length;
+    const existCount  = previewLenses.filter(l => l._status === "exists").length;
+    const repeatCount = previewLenses.filter(l => l._status === "repeat").length;
     counts.innerHTML = `
-      <span class="valid">✓ ${validCount} valid</span>
+      <span class="valid">✓ ${newCount} new</span>
+      ${existCount  ? `&nbsp;·&nbsp;<span style="color:#8a5a00;font-weight:600">${existCount} already in database</span>` : ""}
+      ${repeatCount ? `&nbsp;·&nbsp;${repeatCount} repeated in file` : ""}
       ${invalidCount ? `&nbsp;·&nbsp;<span class="invalid">✗ ${invalidCount} missing required fields</span>` : ""}
       &nbsp;·&nbsp;${selectedCount} selected for import
     `;
+    const dup = document.getElementById("dup-options");
+    dup.classList.toggle("visible", existCount > 0);
+    document.getElementById("dup-options-title").textContent =
+      `${existCount} lens${existCount !== 1 ? "es are" : " is"} already in the database. What should happen to ${existCount !== 1 ? "them" : "it"}?`;
   }
 
   function clearPreview() {
@@ -1205,7 +1405,7 @@
   }
 
   async function confirmImport() {
-    const toImport = previewLenses.filter(l => l._selected && l._valid);
+    const toImport = previewLenses.filter(l => l._selected && canSelect(l));
 
     if (toImport.length === 0) {
       toast("No valid rows selected", "error");
@@ -1220,7 +1420,7 @@
       const res  = await fetch("/api/admin/lenses/csv-import", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ lenses: toImport })
+        body:    JSON.stringify({ lenses: toImport, mode: dupMode })
       });
 
       if (res.status === 401) return window.location.href = "/login";
@@ -1228,7 +1428,11 @@
       const data = await res.json();
       if (!res.ok) { toast(data.error || "Import failed", "error"); btn.disabled = false; return; }
 
-      toast(`✓ ${data.imported} lens${data.imported !== 1 ? 'es' : ''} imported successfully`, "success");
+      const parts = [`${data.imported} added`];
+      if (data.updated)          parts.push(`${data.updated} updated`);
+      if (data.skipped_existing) parts.push(`${data.skipped_existing} skipped (already in database)`);
+      if (data.skipped_repeats)  parts.push(`${data.skipped_repeats} repeats skipped`);
+      toast("✓ " + parts.join(" · "), "success");
       clearPreview();
       loadLenses();
 
@@ -1254,6 +1458,7 @@
 
   // Init
   loadLenses();
+  loadOverview();
 </script>
 </body>
 </html>

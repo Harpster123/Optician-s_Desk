@@ -121,13 +121,54 @@ db.getConnection((err, conn) => {
  console.log("Connected to MySQL");
  conn.release();
 
- // Check the membership column exists — gives a clear message instead of vague "Database error"s
- db.query("SHOW COLUMNS FROM users LIKE 'is_paid'", (err, rows) => {
-   if (!err && rows.length === 0) {
-     console.warn("WARNING: users.is_paid column is missing. Run scripts/add-is-paid.sql in MySQL.");
-   }
- });
+ ensureUserColumns();
 });
+
+// Add any user columns newer code relies on, if the database doesn't have them yet.
+// Safe to run on every start: it only adds what's missing and never changes data.
+const USER_COLUMNS = {
+  is_paid:       "TINYINT(1) NOT NULL DEFAULT 0",
+  last_login_at: "DATETIME NULL",
+  login_count:   "INT NOT NULL DEFAULT 0",
+  last_seen_at:  "DATETIME NULL"
+};
+function ensureUserColumns() {
+  db.query("SHOW COLUMNS FROM users", (err, rows) => {
+    if (err) return console.error("Could not check users table:", err.message);
+    const existing = new Set(rows.map(r => r.Field));
+    for (const [col, def] of Object.entries(USER_COLUMNS)) {
+      if (existing.has(col)) continue;
+      db.query(`ALTER TABLE users ADD COLUMN \`${col}\` ${def}`, (err) => {
+        if (err) console.error(`Could not add users.${col}:`, err.message);
+        else console.log(`Added users.${col} column`);
+      });
+    }
+  });
+}
+
+// Record "last seen" for signed-in users, at most once an hour per user (keeps DB writes low)
+const lastSeenWritten = new Map();
+function touchLastSeen(userId) {
+  if (!userId) return;
+  const now = Date.now();
+  if (now - (lastSeenWritten.get(userId) || 0) < 60 * 60 * 1000) return;
+  lastSeenWritten.set(userId, now);
+  db.query("UPDATE users SET last_seen_at = NOW() WHERE id = ?", [userId], () => {});
+}
+
+// ── Lens duplicate detection ──────────────────────────────────
+// Two lenses are "the same" if company + name match, ignoring case and extra spaces.
+const lensKey = (name, company) =>
+  `${String(company || "").trim().replace(/\s+/g, " ").toLowerCase()}|${String(name || "").trim().replace(/\s+/g, " ").toLowerCase()}`;
+
+function loadLensKeys(cb) {
+  db.query("SELECT id, name, company FROM lenses", (err, rows) => {
+    if (err) return cb(err);
+    const map = new Map();
+    rows.forEach(r => { if (!map.has(lensKey(r.name, r.company))) map.set(lensKey(r.name, r.company), r.id); });
+    cb(null, map);
+  });
+}
 
 //console.error("Database connection failed — running without DB");
 
@@ -221,6 +262,7 @@ function requireUserAuth(req, res, next) {
 
   try {
     req.user = jwt.verify(token, USER_JWT_SECRET);
+    touchLastSeen(req.user.id);
     next();
   } catch {
     res.clearCookie("userToken");
@@ -345,6 +387,9 @@ app.post("/auth/register", authLimiter, async (req, res) => {
       (err, result) => {
         if (err) return res.status(500).json({ error: "Failed to create account" });
 
+        db.query("UPDATE users SET last_login_at = NOW(), last_seen_at = NOW(), login_count = 1 WHERE id = ?",
+          [result.insertId], () => {});
+
         const token = signUserToken({ id: result.insertId, email: email.toLowerCase(), role: safeRole, is_admin: false });
 
         res.cookie("userToken", token, {
@@ -394,6 +439,9 @@ app.post("/auth/login", authLimiter, async (req, res) => {
         sameSite: "strict",
         maxAge:   7 * 24 * 60 * 60 * 1000
       });
+
+      db.query("UPDATE users SET last_login_at = NOW(), last_seen_at = NOW(), login_count = login_count + 1 WHERE id = ?",
+        [user.id], (err) => { if (err) console.error("Could not record login:", err.message); });
 
       res.json({ ok: true, name: user.name });
     }
@@ -703,15 +751,22 @@ app.post("/api/admin/lenses", requireAuth, (req, res) => {
     return res.status(400).json({ error: "name, company and type are required" });
   }
 
-  const sql = `
-    INSERT INTO lenses (name, company, type, \`index\`, corridors, coatings, description, tags)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `;
-  const values = [name, company, type, index || null, corridors || null, coatings || null, description || null, tags || null];
+  loadLensKeys((err, keys) => {
+    if (err) return res.status(500).json({ error: "Database error" });
+    if (keys.has(lensKey(name, company))) {
+      return res.status(409).json({ error: `${company} ${name} is already in the database — edit that lens instead` });
+    }
 
-  db.query(sql, values, (err, result) => {
-    if (err) return res.status(500).json({ error: "Failed to insert lens" });
-    res.status(201).json({ ok: true, id: result.insertId });
+    const sql = `
+      INSERT INTO lenses (name, company, type, \`index\`, corridors, coatings, description, tags)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    const values = [name, company, type, index || null, corridors || null, coatings || null, description || null, tags || null];
+
+    db.query(sql, values, (err, result) => {
+      if (err) return res.status(500).json({ error: "Failed to insert lens" });
+      res.status(201).json({ ok: true, id: result.insertId });
+    });
   });
 });
 
@@ -723,17 +778,25 @@ app.put("/api/admin/lenses/:id", requireAuth, (req, res) => {
     return res.status(400).json({ error: "name, company and type are required" });
   }
 
-  const sql = `
-    UPDATE lenses
-    SET name=?, company=?, type=?, \`index\`=?, corridors=?, coatings=?, description=?, tags=?
-    WHERE id=?
-  `;
-  const values = [name, company, type, index || null, corridors || null, coatings || null, description || null, tags || null, id];
+  loadLensKeys((err, keys) => {
+    if (err) return res.status(500).json({ error: "Database error" });
+    const clash = keys.get(lensKey(name, company));
+    if (clash && String(clash) !== String(id)) {
+      return res.status(409).json({ error: `Another lens is already called ${company} ${name}` });
+    }
 
-  db.query(sql, values, (err, result) => {
-    if (err) return res.status(500).json({ error: "Failed to update lens" });
-    if (result.affectedRows === 0) return res.status(404).json({ error: "Lens not found" });
-    res.json({ ok: true });
+    const sql = `
+      UPDATE lenses
+      SET name=?, company=?, type=?, \`index\`=?, corridors=?, coatings=?, description=?, tags=?
+      WHERE id=?
+    `;
+    const values = [name, company, type, index || null, corridors || null, coatings || null, description || null, tags || null, id];
+
+    db.query(sql, values, (err, result) => {
+      if (err) return res.status(500).json({ error: "Failed to update lens" });
+      if (result.affectedRows === 0) return res.status(404).json({ error: "Lens not found" });
+      res.json({ ok: true });
+    });
   });
 });
 
@@ -786,36 +849,144 @@ app.post("/api/admin/lenses/csv-preview", requireAuth, upload.single("file"), (r
     })
     .filter(l => l.name);
 
-  res.json({ lenses, total: lenses.length });
+  loadLensKeys((err, keys) => {
+    if (err) return res.status(500).json({ error: "Database error" });
+    const seenInFile = new Set();
+    lenses.forEach(l => {
+      const k = lensKey(l.name, l.company);
+      if (keys.has(k))             { l._status = "exists"; l._existing_id = keys.get(k); }
+      else if (seenInFile.has(k))  { l._status = "repeat"; }
+      else                         { l._status = "new"; }
+      seenInFile.add(k);
+    });
+    res.json({
+      lenses,
+      total:    lenses.length,
+      new:      lenses.filter(l => l._valid && l._status === "new").length,
+      existing: lenses.filter(l => l._status === "exists").length,
+      repeats:  lenses.filter(l => l._status === "repeat").length
+    });
+  });
 });
 
 // ── Admin API: CSV import ─────────────────────────────────────
 app.post("/api/admin/lenses/csv-import", requireAuth, (req, res) => {
-  const { lenses } = req.body;
+  const { lenses } = req.body || {};
+  const mode = req.body?.mode === "update" ? "update" : "skip";   // what to do with lenses already in the DB
 
   if (!Array.isArray(lenses) || lenses.length === 0)
     return res.status(400).json({ error: "No lenses provided" });
+  if (lenses.length > 2000)
+    return res.status(400).json({ error: "Too many rows — split the CSV into smaller files" });
 
-  const valid = lenses.filter(l => l.name && l.company && l.type);
+  const str = v => (typeof v === "string" ? v.trim() : "");
+  const valid = lenses
+    .map(l => ({ name: str(l.name), company: str(l.company), type: str(l.type), index: str(l.index),
+                 corridors: str(l.corridors), coatings: str(l.coatings), description: str(l.description), tags: str(l.tags) }))
+    .filter(l => l.name && l.company && l.type);
   if (valid.length === 0)
     return res.status(400).json({ error: "No valid rows to import" });
 
-  const sql    = `INSERT INTO lenses (name, company, type, \`index\`, corridors, coatings, description, tags) VALUES ?`;
-  const values = valid.map(l => [
-    l.name, l.company, l.type,
-    l.index       || null,
-    l.corridors   || null,
-    l.coatings    || null,
-    l.description || null,
-    l.tags        || null
-  ]);
+  // Re-check against the database here — never trust the preview alone
+  loadLensKeys((err, keys) => {
+    if (err) return res.status(500).json({ error: "Database error" });
 
-  db.query(sql, [values], (err, result) => {
-    if (err) {
-      console.error("CSV import error:", err);
-      return res.status(500).json({ error: "Import failed — check the CSV and try again" });
+    const toInsert = [], toUpdate = [];
+    let skippedExisting = 0, skippedRepeats = 0;
+    const seen = new Set();
+
+    for (const l of valid) {
+      const k = lensKey(l.name, l.company);
+      if (seen.has(k)) { skippedRepeats++; continue; }   // same lens twice in one file: keep the first
+      seen.add(k);
+      if (keys.has(k)) {
+        if (mode === "update") toUpdate.push({ ...l, id: keys.get(k) });
+        else skippedExisting++;
+      } else {
+        toInsert.push(l);
+      }
     }
-    res.json({ ok: true, imported: result.affectedRows });
+
+    const vals = l => [l.type, l.index || null, l.corridors || null, l.coatings || null, l.description || null, l.tags || null];
+    const done = (err, inserted) => {
+      if (err) {
+        console.error("CSV import error:", err);
+        return res.status(500).json({ error: "Import failed — check the CSV and try again" });
+      }
+      res.json({ ok: true, imported: inserted, updated: toUpdate.length, skipped_existing: skippedExisting, skipped_repeats: skippedRepeats });
+    };
+
+    // Run updates one by one, then the inserts in a single statement
+    const runUpdates = (i, cb) => {
+      if (i >= toUpdate.length) return cb();
+      const l = toUpdate[i];
+      db.query("UPDATE lenses SET type=?, `index`=?, corridors=?, coatings=?, description=?, tags=? WHERE id=?",
+        [...vals(l), l.id], (err) => err ? done(err) : runUpdates(i + 1, cb));
+    };
+
+    runUpdates(0, () => {
+      if (!toInsert.length) return done(null, 0);
+      const sql = `INSERT INTO lenses (name, company, type, \`index\`, corridors, coatings, description, tags) VALUES ?`;
+      db.query(sql, [toInsert.map(l => [l.name, l.company, ...vals(l)])], (err, result) => done(err, result?.affectedRows || 0));
+    });
+  });
+});
+
+// ── Admin API: Ops dashboard numbers ──────────────────────────
+app.get("/api/admin/stats", requireAuth, (req, res) => {
+  const q = (sql) => new Promise((resolve, reject) => db.query(sql, (err, rows) => err ? reject(err) : resolve(rows)));
+
+  Promise.all([
+    q(`SELECT
+         COUNT(*)                                                         AS total,
+         SUM(is_paid = 1)                                                 AS paid,
+         SUM(is_admin = 1)                                                AS admins,
+         SUM(created_at   >= NOW() - INTERVAL 30 DAY)                     AS joined_30d,
+         SUM(last_login_at IS NOT NULL)                                   AS ever_signed_in,
+         SUM(last_login_at >= NOW() - INTERVAL 7 DAY)                     AS signed_in_7d,
+         SUM(GREATEST(COALESCE(last_seen_at, '1970-01-01'), COALESCE(last_login_at, '1970-01-01')) >= NOW() - INTERVAL 7 DAY)  AS active_7d,
+         SUM(GREATEST(COALESCE(last_seen_at, '1970-01-01'), COALESCE(last_login_at, '1970-01-01')) >= NOW() - INTERVAL 30 DAY) AS active_30d
+       FROM users`),
+    q(`SELECT company, type, COUNT(*) AS n FROM lenses GROUP BY company, type`),
+    q(`SELECT name, email, is_paid, last_login_at, login_count
+       FROM users WHERE last_login_at IS NOT NULL
+       ORDER BY last_login_at DESC LIMIT 10`),
+    q(`SELECT id, name, company FROM lenses`)
+  ]).then(([[u], lensRows, recent, allLenses]) => {
+    // Lenses that share company + name (ignoring case/spacing) — likely duplicates to tidy up
+    const groups = new Map();
+    for (const l of allLenses) {
+      const k = lensKey(l.name, l.company);
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push({ id: l.id, name: l.name, company: l.company });
+    }
+    const duplicates = [...groups.values()].filter(g => g.length > 1);
+
+    const labs = {};
+    for (const r of lensRows) {
+      // Group "Hoya", "hoya" and "Hoya " together as one lab
+      const company = String(r.company || "Unknown").trim().replace(/\s+/g, " ") || "Unknown";
+      const key = company.toLowerCase();
+      labs[key] ??= { company, total: 0, types: {} };
+      labs[key].total += Number(r.n);
+      labs[key].types[r.type] = (labs[key].types[r.type] || 0) + Number(r.n);
+    }
+    const labList = Object.values(labs).sort((a, b) => b.total - a.total);
+    const num = v => Number(v || 0);
+
+    res.json({
+      users: {
+        total: num(u.total), paid: num(u.paid), admins: num(u.admins), joined_30d: num(u.joined_30d),
+        ever_signed_in: num(u.ever_signed_in), signed_in_7d: num(u.signed_in_7d),
+        active_7d: num(u.active_7d), active_30d: num(u.active_30d)
+      },
+      lenses: { total: labList.reduce((n, l) => n + l.total, 0), labs: labList.length, by_lab: labList },
+      recent_signins: recent,
+      duplicates
+    });
+  }).catch(err => {
+    console.error("Stats error:", err.message);
+    res.status(500).json({ error: "Could not load stats" });
   });
 });
 
