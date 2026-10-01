@@ -771,7 +771,8 @@ app.post("/api/admin/lenses", requireAuth, (req, res) => {
 });
 
 app.put("/api/admin/lenses/:id", requireAuth, (req, res) => {
-  const { id } = req.params;
+  const id = parseInt(req.params.id, 10);
+  if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: "Invalid lens ID" });
   const { name, company, type, index, corridors, coatings, description, tags } = req.body;
 
   if (!name || !company || !type) {
@@ -802,6 +803,7 @@ app.put("/api/admin/lenses/:id", requireAuth, (req, res) => {
 
 app.delete("/api/admin/lenses/:id", requireAuth, (req, res) => {
   const id = parseInt(req.params.id, 10);
+  if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: "Invalid lens ID" });
 
   db.query("DELETE FROM lenses WHERE id = ?", [id], (err, result) => {
     if (err) {

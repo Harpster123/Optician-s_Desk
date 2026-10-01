@@ -899,8 +899,8 @@
         <td>${l.coatings ? esc(l.coatings) : "—"}</td>
         <td>
           <div class="td-actions">
-            <button class="btn btn-secondary btn-sm" onclick="openEditModal(${l.id})">Edit</button>
-            <button class="btn btn-danger btn-sm"    onclick="confirmDelete(${l.id}, '${esc(l.name)}')">Delete</button>
+            <button class="btn btn-secondary btn-sm" onclick="openEditModal(${Number(l.id)})">Edit</button>
+            <button class="btn btn-danger btn-sm"    onclick="confirmDelete(${Number(l.id)})">Delete</button>
           </div>
         </td>
       </tr>
@@ -1002,7 +1002,9 @@
   // ── Delete ───────────────────────────────────────────────
   let pendingDeleteId = null;
 
-  function confirmDelete(id, name) {
+  function confirmDelete(id) {
+    const lens = allLenses.find(l => Number(l.id) === Number(id));
+    const name = lens ? `${lens.company} ${lens.name}` : "this lens";
     pendingDeleteId = id;
     document.getElementById("confirm-msg").textContent = `Delete "${name}"? This cannot be undone.`;
     document.getElementById("confirm-overlay").classList.remove("hidden");
@@ -1015,11 +1017,12 @@
   }
 
   async function doDelete() {
-    if (!pendingDeleteId) return;
+    const id = pendingDeleteId;   // remember it — closeConfirm() clears pendingDeleteId
+    if (!id) return;
     closeConfirm();
 
     try {
-      const res = await fetch(`/api/admin/lenses/${pendingDeleteId}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/lenses/${encodeURIComponent(id)}`, { method: "DELETE" });
       if (res.status === 401) return window.location.href = "/login";
       const data = await res.json();
       if (!res.ok) { toast(data.error || "Delete failed", "error"); return; }
